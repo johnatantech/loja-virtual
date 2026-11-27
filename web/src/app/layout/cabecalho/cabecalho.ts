@@ -18,6 +18,9 @@ import { AuthService } from '../../core/auth/auth.service';
         <button type="submit" class="botao-principal">Buscar</button>
       </form>
       <nav class="atalhos" aria-label="Conta e carrinho">
+        @if (auth.ehAdmin()) {
+          <a routerLink="/admin" class="painel">Painel</a>
+        }
         @if (auth.usuario(); as usuario) {
           <a routerLink="/minha-conta">Olá, {{ primeiroNome(usuario.nome) }}</a>
         } @else {

@@ -1,3 +1,4 @@
+using Loja.Application.Admin;
 using Loja.Application.Carrinhos;
 using Loja.Application.Catalogo;
 using Loja.Application.Pedidos;
@@ -48,6 +49,7 @@ public static class DependencyInjection
         services.AddScoped<ICatalogoConsultas, CatalogoConsultas>();
         services.AddScoped<ICarrinhoServico, CarrinhoServico>();
         services.AddScoped<IPedidoServico, PedidoServico>();
+        services.AddScoped<IAdminServico, AdminServico>();
         services.TryAddSingleton(TimeProvider.System);
 
         // Gateway de pagamento escolhido por configuração: "Simulado" (padrão) ou "MercadoPago".

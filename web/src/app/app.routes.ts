@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { adminGuard } from './core/auth/admin.guard';
 import { authGuard } from './core/auth/auth.guard';
 
 export const routes: Routes = [
@@ -56,6 +57,20 @@ export const routes: Routes = [
     title: 'Minha conta | Loja Virtual',
     canActivate: [authGuard],
     loadComponent: () => import('./contas/minha-conta/minha-conta').then((m) => m.MinhaConta),
+  },
+  {
+    path: 'admin',
+    title: 'Painel | Loja Virtual',
+    canActivate: [adminGuard],
+    loadComponent: () => import('./admin/admin-layout').then((m) => m.AdminLayout),
+    children: [
+      { path: '', loadComponent: () => import('./admin/painel/painel').then((m) => m.Painel) },
+      { path: 'produtos', loadComponent: () => import('./admin/produtos/produtos-admin').then((m) => m.ProdutosAdmin) },
+      { path: 'produtos/:id', loadComponent: () => import('./admin/produtos/produto-form').then((m) => m.ProdutoForm) },
+      { path: 'pedidos', loadComponent: () => import('./admin/pedidos/pedidos-admin').then((m) => m.PedidosAdmin) },
+      { path: 'pedidos/:id', loadComponent: () => import('./admin/pedidos/pedidos-admin').then((m) => m.PedidoAdminDetalhe) },
+      { path: 'clientes', loadComponent: () => import('./admin/clientes/clientes-admin').then((m) => m.ClientesAdmin) },
+    ],
   },
   {
     path: '**',

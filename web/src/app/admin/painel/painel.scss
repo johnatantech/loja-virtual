@@ -1,0 +1,78 @@
+.cartoes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2.5rem;
+
+  article,
+  a {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    padding: 1.1rem 1.25rem;
+    border: 1px solid var(--borda);
+    border-radius: var(--raio-sm);
+    color: var(--texto);
+    text-decoration: none;
+  }
+
+  span {
+    font-size: 0.85rem;
+    color: var(--texto-suave);
+  }
+
+  strong {
+    font-size: 1.5rem;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .destaque {
+    border-color: var(--destaque);
+
+    &:hover {
+      background: var(--superficie-2);
+    }
+
+    strong {
+      color: var(--destaque);
+    }
+  }
+}
+
+.grade {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 2rem;
+
+  h2 {
+    margin: 0 0 0.75rem;
+    font-size: 1rem;
+  }
+}
+
+.lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+
+  li {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--borda);
+    font-size: 0.92rem;
+  }
+
+  span:last-child {
+    font-variant-numeric: tabular-nums;
+    color: var(--texto-suave);
+    white-space: nowrap;
+  }
+
+  .zerado {
+    color: var(--alerta) !important;
+    font-weight: 700;
+  }
+}

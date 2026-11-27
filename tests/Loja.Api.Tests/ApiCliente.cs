@@ -12,6 +12,17 @@ public static class ApiCliente
 
     public static string EmailUnico() => $"teste-{Guid.NewGuid():N}@exemplo.com";
 
+    public static async Task<HttpClient> EntrarComoAdminAsync(this WebApplicationFactory<Program> factory)
+    {
+        var cliente = factory.CreateClient();
+        var resposta = await cliente.PostAsJsonAsync("/api/contas/login",
+            new { email = ApiFactory.EmailAdmin, senha = ApiFactory.SenhaAdmin });
+        resposta.EnsureSuccessStatusCode();
+        var sessao = (await resposta.Content.ReadFromJsonAsync<SessaoDto>())!;
+        cliente.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", sessao.Token);
+        return cliente;
+    }
+
     public static async Task<(HttpClient Cliente, SessaoDto Sessao)> CriarContaAsync(this WebApplicationFactory<Program> factory)
     {
         var cliente = factory.CreateClient();

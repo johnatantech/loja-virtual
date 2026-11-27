@@ -8,13 +8,17 @@ namespace Loja.Infrastructure.Persistencia;
 /// <summary>Perfis de acesso e catálogo de demonstração, inseridos só quando ainda não existem.</summary>
 public static class DadosIniciais
 {
-    public static async Task PopularAsync(LojaDbContext db, RoleManager<IdentityRole> perfis, CancellationToken ct = default)
+    public static async Task PopularAsync(
+        LojaDbContext db, RoleManager<IdentityRole> perfis, UserManager<Usuario> usuarios,
+        string? emailAdmin, string? senhaAdmin, CancellationToken ct = default)
     {
         foreach (var perfil in Perfis.Todos)
         {
             if (!await perfis.RoleExistsAsync(perfil))
                 await perfis.CreateAsync(new IdentityRole(perfil));
         }
+
+        await CriarAdminAsync(usuarios, emailAdmin, senhaAdmin);
 
         if (await db.Categorias.AnyAsync(ct))
             return;
@@ -40,5 +44,24 @@ public static class DadosIniciais
             new Produto("Tapete de Yoga", "Antiderrapante, 6 mm de espessura.", 79.90m, 20, esporte.Id),
             new Produto("Bicicleta Aro 29", "Quadro de alumínio, 21 marchas e freio a disco.", 1590.00m, 3, esporte.Id));
         await db.SaveChangesAsync(ct);
+    }
+
+    /// <summary>
+    /// Cria a conta de administrador com e-mail e senha vindos da configuração (user-secrets),
+    /// nunca do código. Sem configuração, nenhum admin é criado.
+    /// </summary>
+    private static async Task CriarAdminAsync(UserManager<Usuario> usuarios, string? email, string? senha)
+    {
+        if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(senha))
+            return;
+        if (await usuarios.FindByEmailAsync(email) is not null)
+            return;
+
+        var admin = new Usuario { Nome = "Administrador", Email = email, UserName = email };
+        var resultado = await usuarios.CreateAsync(admin, senha);
+        if (!resultado.Succeeded)
+            throw new InvalidOperationException(
+                "Não foi possível criar o administrador: " + string.Join(" ", resultado.Errors.Select(e => e.Description)));
+        await usuarios.AddToRolesAsync(admin, [Perfis.Admin, Perfis.Cliente]);
     }
 }

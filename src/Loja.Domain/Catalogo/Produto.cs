@@ -25,18 +25,37 @@ public class Produto
 
     public Produto(string nome, string descricao, decimal preco, int estoque, int categoriaId, string? imagemUrl = null)
     {
-        if (string.IsNullOrWhiteSpace(nome))
-            throw new DomainException("O nome do produto é obrigatório.");
         if (estoque < 0)
             throw new DomainException("O estoque inicial não pode ser negativo.");
 
-        Nome = nome.Trim();
-        Slug = Comum.Slug.Gerar(Nome);
-        Descricao = descricao.Trim();
+        DefinirDados(nome, descricao, categoriaId, imagemUrl);
         DefinirPreco(preco);
         Estoque = estoque;
+    }
+
+    /// <summary>Edição pelo painel administrativo. O slug acompanha o novo nome.</summary>
+    public void Atualizar(string nome, string descricao, int categoriaId, string? imagemUrl) =>
+        DefinirDados(nome, descricao, categoriaId, imagemUrl);
+
+    private void DefinirDados(string nome, string descricao, int categoriaId, string? imagemUrl)
+    {
+        if (string.IsNullOrWhiteSpace(nome) || nome.Trim().Length > 150)
+            throw new DomainException("O nome do produto é obrigatório (até 150 caracteres).");
+        if ((descricao?.Trim().Length ?? 0) > 2000)
+            throw new DomainException("A descrição pode ter até 2.000 caracteres.");
+        if (categoriaId <= 0)
+            throw new DomainException("Escolha uma categoria.");
+
+        var imagem = string.IsNullOrWhiteSpace(imagemUrl) ? null : imagemUrl.Trim();
+        // Só aceita https: evita links "javascript:" e imagens servidas sem criptografia.
+        if (imagem is not null && (!Uri.TryCreate(imagem, UriKind.Absolute, out var uri) || uri.Scheme != Uri.UriSchemeHttps || imagem.Length > 500))
+            throw new DomainException("A imagem precisa ser um endereço https:// válido.");
+
+        Nome = nome.Trim();
+        Slug = Comum.Slug.Gerar(Nome);
+        Descricao = descricao?.Trim() ?? "";
         CategoriaId = categoriaId;
-        ImagemUrl = imagemUrl;
+        ImagemUrl = imagem;
     }
 
     public void DefinirPreco(decimal preco)

@@ -34,7 +34,16 @@ if ! dotnet user-secrets list --project src/Loja.Api | grep -q '^Jwt:Chave'; the
   echo "✓ Chave do JWT gerada nos user-secrets"
 fi
 
-# 5. Dependências
+# 5. Conta de administrador do painel: senha aleatória, guardada nos user-secrets e no .env
+if ! dotnet user-secrets list --project src/Loja.Api | grep -q '^Admin:Senha'; then
+  senha_admin="Adm$(openssl rand -base64 24 | tr -dc 'A-Za-z0-9' | head -c 16)1"
+  dotnet user-secrets set "Admin:Email" "admin@loja.local" --project src/Loja.Api > /dev/null
+  dotnet user-secrets set "Admin:Senha" "${senha_admin}" --project src/Loja.Api > /dev/null
+  { echo "ADMIN_EMAIL=admin@loja.local"; echo "ADMIN_SENHA=${senha_admin}"; } >> .env
+  echo "✓ Administrador criado: admin@loja.local (senha no arquivo .env)"
+fi
+
+# 6. Dependências
 dotnet restore
 (cd web && npm ci)
 echo

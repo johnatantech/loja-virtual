@@ -33,7 +33,7 @@ web/ (Angular)  →  Loja.Api  →  Loja.Application  →  Loja.Domain
 | 2 | Catálogo: busca, filtros, paginação e página de produto | ✅ |
 | 3 | Contas e carrinho: autenticação JWT e carrinho persistido | ✅ |
 | 4 | Checkout: pedido, Mercado Pago (sandbox), webhook idempotente, estoque | ✅ |
-| 5 | Painel administrativo: produtos, estoque, pedidos e dashboard | ⏳ |
+| 5 | Painel administrativo: produtos, estoque, pedidos e dashboard | ✅ |
 | 6 | Qualidade e deploy: testes E2E (Playwright), CI/CD e publicação | ⏳ |
 
 ## Como rodar
@@ -127,6 +127,15 @@ cd web && npm test          # front-end
   informando outro estado.
 - **Pedido guarda preços e endereço do momento da compra**, imunes a mudanças posteriores.
 - **Datas sempre em UTC** no banco e na API; o navegador mostra no fuso de quem acessa.
+- **Painel protegido no servidor, não só na tela**: todas as rotas `/api/admin` exigem o perfil
+  Admin (cliente logado recebe 403); o guard do Angular só melhora a navegação.
+- **Administrador sem senha no código**: criado na inicialização com e-mail e senha aleatória
+  gerados pelo `setup-dev.sh` nos user-secrets.
+- **Produto desativado sai da vitrine sem apagar histórico**: pedidos antigos continuam íntegros.
+- **Pedido avança pela máquina de estados do domínio**: o painel não consegue, por exemplo,
+  enviar um pedido não pago ou cancelar um já entregue.
+- **Erros de negócio registrados como aviso**: estoque insuficiente ou ação inválida viram 400
+  (e conflitos de concorrência, 409) sem stack trace no log; só falhas reais aparecem como erro.
 - **Um SQL Server para toda a suíte de integração** (coleção do xUnit), em vez de um contêiner
   por classe de teste.
 
@@ -153,7 +162,18 @@ cd web && npm test          # front-end
 | POST | `/api/pedidos/{id}/pagamento` | Gera de novo o link de pagamento 🔒 |
 | POST | `/api/pagamentos/webhook/mercadopago` | Notificações do Mercado Pago (exige assinatura válida) |
 | POST | `/api/pagamentos/simulado/{id}` | Aprova ou recusa um pagamento no gateway simulado 🔒 |
+| GET | `/api/admin/dashboard` | Faturamento, pedidos por status, estoque baixo, mais vendidos 👑 |
+| GET/POST/PUT | `/api/admin/produtos` | Listar (com inativos), criar e editar produtos 👑 |
+| POST | `/api/admin/produtos/{id}/estoque` | Repor estoque 👑 |
+| POST | `/api/admin/produtos/{id}/ativar` · `/desativar` | Mostrar ou tirar da vitrine 👑 |
+| GET | `/api/admin/pedidos?status=` | Pedidos de todos os clientes 👑 |
+| POST | `/api/admin/pedidos/{id}/enviar` · `/entregar` · `/cancelar` | Avançar o pedido 👑 |
+| GET | `/api/admin/clientes` | Clientes, bloqueios e quantidade de pedidos 👑 |
+| POST | `/api/admin/clientes/{id}/desbloquear` | Liberar conta bloqueada por tentativas 👑 |
 | GET | `/health` | Saúde da API e conexão com o banco |
 | GET | `/scalar` | Documentação interativa (só em desenvolvimento) |
 
-🔒 = exige o cabeçalho `Authorization: Bearer <token>`.
+🔒 = exige o cabeçalho `Authorization: Bearer <token>`. 👑 = exige também o perfil Admin.
+
+O acesso de administrador é criado pelo `setup-dev.sh`: e-mail `admin@loja.local` e senha
+aleatória, que fica no arquivo `.env` (fora do Git).

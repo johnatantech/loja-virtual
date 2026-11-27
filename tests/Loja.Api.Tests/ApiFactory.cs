@@ -15,6 +15,9 @@ public class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
     // Chave só de teste, a mesma para todas as variações desta factory; a real fica em user-secrets.
     private readonly string _chaveJwt = Convert.ToBase64String(Guid.NewGuid().ToByteArray()) + Guid.NewGuid();
 
+    public const string EmailAdmin = "admin@teste.local";
+    public const string SenhaAdmin = "AdminTeste123";
+
     public async Task InitializeAsync() => await _banco.StartAsync();
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
@@ -24,6 +27,9 @@ public class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
         builder.UseSetting("Jwt:Chave", _chaveJwt);
         // Os testes fazem muitos logins seguidos; o limite real continua valendo fora deles.
         builder.UseSetting("Seguranca:TentativasPorMinuto", "1000");
+        // Administrador criado na inicialização, como no setup-dev.sh.
+        builder.UseSetting("Admin:Email", EmailAdmin);
+        builder.UseSetting("Admin:Senha", SenhaAdmin);
     }
 
     async Task IAsyncLifetime.DisposeAsync()

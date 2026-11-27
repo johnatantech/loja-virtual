@@ -1,9 +1,9 @@
 using Loja.Api.Autenticacao;
 using Loja.Api.Endpoints;
-using Loja.Domain.Comum;
+using Loja.Api.Middleware;
 using Loja.Infrastructure;
+using Loja.Infrastructure.Identidade;
 using Loja.Infrastructure.Persistencia;
-using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
@@ -12,6 +12,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddAutenticacaoJwt(builder.Configuration);
+builder.Services.AddAuthorizationBuilder()
+    .AddPolicy(AdminEndpoints.PoliticaAdmin, p => p.RequireRole(Perfis.Admin));
 builder.Services.AddOpenApi();
 builder.Services.AddProblemDetails();
 builder.Services.AddHealthChecks().AddDbContextCheck<LojaDbContext>("banco");
@@ -22,16 +24,11 @@ builder.Services.AddCors(o => o.AddDefaultPolicy(p =>
 
 var app = builder.Build();
 
-// Regras de negócio violadas viram 400 com ProblemDetails, em vez de erro 500.
-app.UseExceptionHandler(erro => erro.Run(async ctx =>
-{
-    var excecao = ctx.Features.Get<IExceptionHandlerFeature>()?.Error;
-    var (status, titulo) = excecao is DomainException
-        ? (StatusCodes.Status400BadRequest, excecao.Message)
-        : (StatusCodes.Status500InternalServerError, "Erro inesperado no servidor.");
-    ctx.Response.StatusCode = status;
-    await Results.Problem(title: titulo, statusCode: status).ExecuteAsync(ctx);
-}));
+// Erros inesperados viram 500 genérico (sem detalhes internos para o cliente).
+app.UseExceptionHandler(erro => erro.Run(ctx =>
+    Results.Problem(title: "Erro inesperado no servidor.", statusCode: StatusCodes.Status500InternalServerError).ExecuteAsync(ctx)));
+// Regras de negócio violadas viram 400 (e conflitos de concorrência, 409), registradas como aviso.
+app.UseMiddleware<ErrosDeNegocioMiddleware>();
 
 if (app.Environment.IsDevelopment())
 {
@@ -42,7 +39,10 @@ if (app.Environment.IsDevelopment())
     using var escopo = app.Services.CreateScope();
     var db = escopo.ServiceProvider.GetRequiredService<LojaDbContext>();
     await db.Database.MigrateAsync();
-    await DadosIniciais.PopularAsync(db, escopo.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>());
+    await DadosIniciais.PopularAsync(db,
+        escopo.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>(),
+        escopo.ServiceProvider.GetRequiredService<UserManager<Usuario>>(),
+        builder.Configuration["Admin:Email"], builder.Configuration["Admin:Senha"]);
 }
 
 app.UseCors();
@@ -56,6 +56,7 @@ app.MapContasEndpoints();
 app.MapCarrinhoEndpoints();
 app.MapPedidosEndpoints();
 app.MapPagamentosEndpoints();
+app.MapAdminEndpoints();
 
 app.Run();
 
