@@ -1,5 +1,7 @@
 # 🛒 Loja Virtual: e-commerce full stack com .NET 10 e Angular
 
+[![CI](https://github.com/johnatantech/loja-virtual/actions/workflows/ci.yml/badge.svg)](https://github.com/johnatantech/loja-virtual/actions/workflows/ci.yml)
+
 E-commerce completo de demonstração: catálogo, carrinho, checkout com pagamento em sandbox,
 área do cliente e painel administrativo. Projeto de portfólio com foco em **regras de negócio
 bem testadas, segurança e arquitetura organizada**.
@@ -13,7 +15,8 @@ bem testadas, segurança e arquitetura organizada**.
 | Front-end | Angular 22 (standalone components, signals) |
 | API | ASP.NET Core (.NET 10 LTS), Minimal APIs, OpenAPI + Scalar, Identity + JWT |
 | Dados | SQL Server 2022, Entity Framework Core 10 |
-| Testes | xUnit, Testcontainers (SQL Server real), Vitest + Angular Testing |
+| Testes | xUnit, Testcontainers (SQL Server real), Vitest + Angular Testing, Playwright (ponta a ponta) |
+| CI | GitHub Actions: build, testes de integração e ponta a ponta a cada push |
 | Ambiente | GitHub Codespaces / Dev Containers, Docker Compose |
 
 ## Arquitetura
@@ -34,7 +37,8 @@ web/ (Angular)  →  Loja.Api  →  Loja.Application  →  Loja.Domain
 | 3 | Contas e carrinho: autenticação JWT e carrinho persistido | ✅ |
 | 4 | Checkout: pedido, Mercado Pago (sandbox), webhook idempotente, estoque | ✅ |
 | 5 | Painel administrativo: produtos, estoque, pedidos e dashboard | ✅ |
-| 6 | Qualidade e deploy: testes E2E (Playwright), CI/CD e publicação | ⏳ |
+| 6a | Qualidade: ajustes finais, CI no GitHub Actions e testes de ponta a ponta | ✅ |
+| 6b | Publicação da demo | ⏳ |
 
 ## Como rodar
 
@@ -76,6 +80,18 @@ Por padrão a loja usa o **pagamento simulado**. Para usar o sandbox do Mercado 
 dotnet test                 # domínio + integração (sobe um SQL Server via Testcontainers)
 cd web && npm test          # front-end
 ```
+
+Testes de ponta a ponta (com a API e o Angular rodando):
+```bash
+cd web
+npx playwright install chromium     # só na primeira vez
+set -a; source ../.env; set +a      # credenciais do administrador
+E2E_ADMIN_EMAIL=$ADMIN_EMAIL E2E_ADMIN_SENHA=$ADMIN_SENHA npm run e2e
+```
+
+No GitHub Actions, os três níveis rodam a cada push: o workflow sobe um SQL Server, a API e o
+Angular, e o Playwright faz uma compra completa (cadastro, carrinho, checkout, pagamento) e o
+administrador envia e entrega o pedido. Todas as credenciais do CI são geradas na hora e descartadas.
 
 ## Decisões técnicas
 - **Regras de negócio no domínio**: produto não vende além do estoque, pedido segue uma máquina
@@ -126,6 +142,11 @@ cd web && npm test          # front-end
 - **Frete pela faixa do CEP, não pela UF digitada**: o cliente não consegue pagar menos frete
   informando outro estado.
 - **Pedido guarda preços e endereço do momento da compra**, imunes a mudanças posteriores.
+- **Total conferido no servidor antes de fechar o pedido**: o checkout envia o total que o
+  cliente está vendo; se o carrinho mudou (por exemplo, em outra aba), a API recusa o pedido e
+  mostra o valor atualizado, em vez de cobrar algo diferente do que a pessoa confirmou.
+- **Chaves de criptografia do ASP.NET guardadas no banco** (DataProtection), para sobreviverem a
+  reinícios e deploys.
 - **Datas sempre em UTC** no banco e na API; o navegador mostra no fuso de quem acessa.
 - **Painel protegido no servidor, não só na tela**: todas as rotas `/api/admin` exigem o perfil
   Admin (cliente logado recebe 403); o guard do Angular só melhora a navegação.

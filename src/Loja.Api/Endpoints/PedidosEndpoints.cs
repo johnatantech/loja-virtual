@@ -19,9 +19,9 @@ public static class PedidosEndpoints
 
         var pedidos = app.MapGroup("/api/pedidos").WithTags("Pedidos").RequireAuthorization();
 
-        pedidos.MapPost("/", async (EnderecoDto endereco, ClaimsPrincipal u, IPedidoServico s, CancellationToken ct) =>
+        pedidos.MapPost("/", async (NovoPedidoDto dados, ClaimsPrincipal u, IPedidoServico s, CancellationToken ct) =>
             {
-                var criado = await s.CriarAsync(u.IdUsuario(), endereco, ct);
+                var criado = await s.CriarAsync(u.IdUsuario(), dados, ct);
                 return TypedResults.Created($"/api/pedidos/{criado.Id}", criado);
             })
             .WithSummary("Fecha o pedido a partir do carrinho e devolve o link de pagamento.");

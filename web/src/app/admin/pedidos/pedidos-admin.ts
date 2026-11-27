@@ -2,6 +2,7 @@ import { CurrencyPipe, DatePipe } from '@angular/common';
 import { Component, effect, inject, input, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
+import { CepPipe } from '../../core/cep.pipe';
 import { lerErro } from '../../core/erros';
 import { Pagina } from '../../catalogo/catalogo.models';
 import { PedidoDetalhe, ROTULO_STATUS, StatusPedido, numeroPedido } from '../../pedidos/pedidos.models';
@@ -81,7 +82,7 @@ export class PedidosAdmin {
 
 @Component({
   selector: 'app-pedido-admin',
-  imports: [RouterLink, CurrencyPipe, DatePipe],
+  imports: [RouterLink, CurrencyPipe, DatePipe, CepPipe],
   template: `
     <nav class="trilha"><a routerLink="/admin/pedidos">Pedidos</a> <span aria-hidden="true">/</span> {{ numero(id()) }}</nav>
     @if (pedido(); as p) {
@@ -122,7 +123,7 @@ export class PedidosAdmin {
 
       @if (p.endereco; as e) {
         <h2>Entrega</h2>
-        <address>{{ e.destinatario }} · {{ e.logradouro }}, {{ e.numero }}{{ e.complemento ? ' - ' + e.complemento : '' }} · {{ e.bairro }} · {{ e.cidade }}/{{ e.uf }} · CEP {{ e.cep }}</address>
+        <address>{{ e.destinatario }} · {{ e.logradouro }}, {{ e.numero }}{{ e.complemento ? ' - ' + e.complemento : '' }} · {{ e.bairro }} · {{ e.cidade }}/{{ e.uf }} · CEP {{ e.cep | cep }}</address>
       }
     } @else {
       <p class="suave">Carregando...</p>

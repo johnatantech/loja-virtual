@@ -22,7 +22,7 @@ public class PedidoServico(
         return new CotacaoFreteDto(destino.Uf, subtotal, frete.Valor, frete.PrazoDias, frete.Gratis, subtotal + frete.Valor);
     }
 
-    public async Task<PedidoCriadoDto> CriarAsync(string clienteId, EnderecoDto dados, CancellationToken ct = default)
+    public async Task<PedidoCriadoDto> CriarAsync(string clienteId, NovoPedidoDto dados, CancellationToken ct = default)
     {
         var cep = Cep.Criar(dados.Cep);
         var endereco = EnderecoEntrega.Criar(
@@ -46,6 +46,11 @@ public class PedidoServico(
                 produto.BaixarEstoque(item.Quantidade);    // valida estoque disponível
             }
             novo.DefinirEntrega(endereco, CalculadoraFrete.Cotar(cep, novo.Subtotal));
+
+            // O cliente confirma um valor na tela; se o total real for outro, nada é gravado.
+            if (dados.TotalEsperado is { } esperado && esperado != novo.Total)
+                throw new DomainException(
+                    $"O total do seu pedido mudou de {Moeda.Formatar(esperado)} para {Moeda.Formatar(novo.Total)}. Confira o carrinho antes de pagar.");
 
             db.Pedidos.Add(novo);
             carrinho.Esvaziar();

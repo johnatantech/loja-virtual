@@ -73,7 +73,7 @@ describe('Checkout', () => {
     (el.querySelector('aside .botao-principal') as HTMLButtonElement).click();
 
     const pedido = http.expectOne('/api/pedidos');
-    expect(pedido.request.body).toMatchObject({ cep: '01310100', numero: '1000', logradouro: 'Av. Paulista' });
+    expect(pedido.request.body).toMatchObject({ cep: '01310100', numero: '1000', logradouro: 'Av. Paulista', totalEsperado: 105.8 });
     pedido.flush({ id: 'abc', linkPagamento: '/pagamento-simulado/abc' });
     await Promise.resolve();
     http.expectOne('/api/carrinho/cotacao').flush({ itens: [], quantidadeTotal: 0, total: 0, podeFinalizar: false });

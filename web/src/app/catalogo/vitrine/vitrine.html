@@ -44,6 +44,17 @@
     <header class="resultados-topo">
       <div>
         <h1>{{ titulo() }}</h1>
+        @if (faixaPreco(); as f) {
+          <p class="faixa">
+            @if (f.min !== undefined && f.max !== undefined) {
+              De {{ f.min | currency }} a {{ f.max | currency }}
+            } @else if (f.min !== undefined) {
+              A partir de {{ f.min | currency }}
+            } @else {
+              Até {{ f.max | currency }}
+            }
+          </p>
+        }
         @if (estado(); as e) {
           @if (e.tipo === 'pronto') {
             <p class="total">{{ e.dados.total }} {{ e.dados.total === 1 ? 'produto' : 'produtos' }}</p>

@@ -53,7 +53,7 @@
           {{ e.destinatario }}<br />
           {{ e.logradouro }}, {{ e.numero }}{{ e.complemento ? ' - ' + e.complemento : '' }}<br />
           {{ e.bairro }} - {{ e.cidade }}/{{ e.uf }}<br />
-          CEP {{ e.cep.slice(0, 5) }}-{{ e.cep.slice(5) }}
+          CEP {{ e.cep | cep }}
         </address>
       </section>
     }

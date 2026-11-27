@@ -9,6 +9,11 @@ export interface Endereco {
   uf: string | null;
 }
 
+export interface NovoPedido extends Endereco {
+  /** Total exibido na tela; a API recusa o pedido se o valor real for diferente. */
+  totalEsperado: number;
+}
+
 export interface CotacaoFrete {
   uf: string;
   subtotal: number;

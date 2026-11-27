@@ -75,6 +75,12 @@ export class Checkout {
     }
   }
 
+  private async recotarFrete(): Promise<void> {
+    const cep = this.form.controls.cep.value.replace(/\D/g, '');
+    if (cep.length !== 8) return;
+    this.frete.set(await firstValueFrom(this.pedidos.cotarFrete(cep)).catch(() => null));
+  }
+
   protected async finalizar(): Promise<void> {
     if (this.form.invalid || !this.frete()) {
       this.form.markAllAsTouched();
@@ -84,7 +90,9 @@ export class Checkout {
     this.erro.set(null);
     try {
       const v = this.form.getRawValue();
-      const criado = await firstValueFrom(this.pedidos.criar({ ...v, complemento: v.complemento || null }));
+      const criado = await firstValueFrom(
+        this.pedidos.criar({ ...v, complemento: v.complemento || null, totalEsperado: this.frete()!.total }),
+      );
       await this.carrinho.recarregar(); // o carrinho foi esvaziado pela API
       if (criado.linkPagamento) {
         irParaPagamento(criado.linkPagamento, (url) => void this.router.navigateByUrl(url));
@@ -93,7 +101,9 @@ export class Checkout {
       }
     } catch (e) {
       this.erro.set(lerErro(e, 'Não foi possível fechar o pedido.').mensagem);
-      await this.carrinho.recarregar(); // mostra avisos atualizados (ex.: produto esgotou)
+      // Atualiza carrinho e frete na tela, para o cliente conferir o valor real antes de tentar de novo.
+      await this.carrinho.recarregar();
+      await this.recotarFrete();
     } finally {
       this.enviando.set(false);
     }

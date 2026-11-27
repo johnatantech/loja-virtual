@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { CotacaoFrete, Endereco, PedidoCriado, PedidoDetalhe, PedidoResumo } from './pedidos.models';
+import { CotacaoFrete, NovoPedido, PedidoCriado, PedidoDetalhe, PedidoResumo } from './pedidos.models';
 
 export interface EnderecoViaCep {
   logradouro: string;
@@ -23,8 +23,8 @@ export class PedidosService {
     return this.http.get<CotacaoFrete>('/api/checkout/frete', { params: { cep } });
   }
 
-  criar(endereco: Endereco) {
-    return this.http.post<PedidoCriado>('/api/pedidos', endereco);
+  criar(pedido: NovoPedido) {
+    return this.http.post<PedidoCriado>('/api/pedidos', pedido);
   }
 
   listar() {

@@ -58,6 +58,42 @@ public class PedidosApiTests(ApiFactory factory)
     }
 
     [Fact]
+    public async Task Pedido_e_recusado_se_o_total_mudou_desde_a_tela()
+    {
+        var (cliente, _) = await factory.CriarContaAsync();
+        var cafeteira = await Produto("cafeteira-italiana");
+        await cliente.PutAsJsonAsync($"/api/carrinho/itens/{cafeteira.Id}", new { quantidade = 1 });
+
+        // O cliente viu um total, mas o carrinho mudou (por exemplo, em outra aba).
+        var resposta = await cliente.PostAsJsonAsync("/api/pedidos", new
+        {
+            destinatario = "Maria", cep = "01310-100", logradouro = "Av. Paulista", numero = "1",
+            bairro = "Bela Vista", cidade = "São Paulo", totalEsperado = 10.00m,
+        });
+
+        Assert.Equal(HttpStatusCode.BadRequest, resposta.StatusCode);
+        Assert.Contains("O total do seu pedido mudou de R$ 10,00", await resposta.Content.ReadAsStringAsync());
+        Assert.Equal(cafeteira.Estoque, (await Produto("cafeteira-italiana")).Estoque); // nada foi gravado
+        Assert.Single((await cliente.GetFromJsonAsync<CarrinhoDto>("/api/carrinho"))!.Itens);
+    }
+
+    [Fact]
+    public async Task Pedido_com_total_esperado_correto_e_aceito()
+    {
+        var (cliente, _) = await factory.CriarContaAsync();
+        var cafeteira = await Produto("cafeteira-italiana");
+        await cliente.PutAsJsonAsync($"/api/carrinho/itens/{cafeteira.Id}", new { quantidade = 1 });
+        var cotacao = await cliente.GetFromJsonAsync<CotacaoFreteDto>("/api/checkout/frete?cep=01310100");
+
+        var resposta = await cliente.PostAsJsonAsync("/api/pedidos", new
+        {
+            destinatario = "Maria", cep = "01310-100", logradouro = "Av. Paulista", numero = "1",
+            bairro = "Bela Vista", cidade = "São Paulo", totalEsperado = cotacao!.Total,
+        });
+        Assert.Equal(HttpStatusCode.Created, resposta.StatusCode);
+    }
+
+    [Fact]
     public async Task Carrinho_vazio_nao_vira_pedido()
     {
         var (cliente, _) = await factory.CriarContaAsync();

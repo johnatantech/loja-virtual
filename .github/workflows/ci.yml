@@ -1,0 +1,126 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Só leitura do repositório: o workflow não precisa de nenhuma outra permissão.
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  api:
+    name: API (.NET) - build e testes
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+      - name: Restaurar e compilar
+        run: dotnet build --configuration Release
+      # Os testes de integração sobem um SQL Server real via Testcontainers (o runner tem Docker).
+      - name: Testes de domínio e integração
+        run: dotnet test --configuration Release --no-build --logger "console;verbosity=normal"
+
+  web:
+    name: Web (Angular) - testes e build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "lts/*"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci
+      - name: Testes unitários
+        run: npx ng test --watch=false
+      - name: Build de produção
+        run: npx ng build
+
+  e2e:
+    name: Ponta a ponta (Playwright)
+    runs-on: ubuntu-latest
+    needs: [api, web]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "lts/*"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      # Credenciais descartáveis, geradas a cada execução: nada fica gravado no repositório.
+      - name: Gerar segredos temporários
+        run: |
+          echo "SA_SENHA=$(openssl rand -base64 24 | tr -dc 'A-Za-z0-9' | head -c 20)Aa1!" >> "$GITHUB_ENV"
+          echo "JWT_CHAVE=$(openssl rand -base64 48)" >> "$GITHUB_ENV"
+          echo "ADMIN_SENHA=Adm$(openssl rand -base64 24 | tr -dc 'A-Za-z0-9' | head -c 16)1" >> "$GITHUB_ENV"
+
+      - name: Subir SQL Server
+        run: |
+          docker run -d --name loja-db -p 1433:1433 \
+            -e ACCEPT_EULA=Y -e MSSQL_PID=Developer -e MSSQL_SA_PASSWORD="$SA_SENHA" \
+            mcr.microsoft.com/mssql/server:2022-latest
+          for i in $(seq 1 30); do
+            docker exec loja-db /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "$SA_SENHA" -C -Q "SELECT 1" -b -o /dev/null && exit 0
+            sleep 3
+          done
+          echo "SQL Server não ficou pronto a tempo" && docker logs loja-db && exit 1
+
+      - name: Subir API
+        env:
+          ASPNETCORE_ENVIRONMENT: Development # aplica migrations e dados iniciais
+          ASPNETCORE_URLS: http://localhost:5120
+          ConnectionStrings__Loja: "Server=localhost,1433;Database=Loja;User Id=sa;Password=${{ env.SA_SENHA }};TrustServerCertificate=True;Encrypt=True"
+          Jwt__Chave: ${{ env.JWT_CHAVE }}
+          Admin__Email: admin@ci.local
+          Admin__Senha: ${{ env.ADMIN_SENHA }}
+        run: |
+          dotnet run --project src/Loja.Api --no-launch-profile > api.log 2>&1 &
+          for i in $(seq 1 60); do curl -fs http://localhost:5120/health > /dev/null && exit 0; sleep 2; done
+          echo "API não respondeu" && cat api.log && exit 1
+
+      - name: Instalar dependências do front e o navegador
+        working-directory: web
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+
+      - name: Subir Angular
+        working-directory: web
+        run: |
+          npx ng serve --port 4200 > ../web.log 2>&1 &
+          for i in $(seq 1 60); do curl -fs http://localhost:4200 > /dev/null && exit 0; sleep 2; done
+          echo "Angular não respondeu" && cat ../web.log && exit 1
+
+      - name: Testes de ponta a ponta
+        working-directory: web
+        env:
+          E2E_ADMIN_EMAIL: admin@ci.local
+          E2E_ADMIN_SENHA: ${{ env.ADMIN_SENHA }}
+        run: npx playwright test
+
+      - name: Guardar relatório e logs em caso de falha
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: relatorio-e2e
+          path: |
+            web/playwright-report/
+            web/test-results/
+            api.log
+            web.log
+          retention-days: 7

@@ -5,7 +5,7 @@ public interface IPedidoServico
     Task<CotacaoFreteDto> CotarFreteAsync(string clienteId, string cep, CancellationToken ct = default);
 
     /// <summary>Transforma o carrinho em pedido: baixa o estoque, grava a entrega e gera a cobrança.</summary>
-    Task<PedidoCriadoDto> CriarAsync(string clienteId, EnderecoDto endereco, CancellationToken ct = default);
+    Task<PedidoCriadoDto> CriarAsync(string clienteId, NovoPedidoDto dados, CancellationToken ct = default);
 
     Task<IReadOnlyList<PedidoResumoDto>> ListarAsync(string clienteId, CancellationToken ct = default);
     Task<PedidoDetalheDto?> ObterAsync(string clienteId, Guid pedidoId, CancellationToken ct = default);

@@ -74,7 +74,7 @@ public class Pedido
         if (Status == StatusPedido.Pago && PagamentoExternoId == pagamentoId)
             return false;
         if (valorPago != Total)
-            throw new DomainException($"Valor pago ({valorPago:N2}) diferente do total do pedido ({Total:N2}).");
+            throw new DomainException($"Valor pago ({Moeda.Formatar(valorPago)}) diferente do total do pedido ({Moeda.Formatar(Total)}).");
 
         ConfirmarPagamento();
         PagamentoExternoId = pagamentoId;

@@ -58,3 +58,15 @@ public class EntregaTests
             EnderecoEntrega.Criar("Maria", Cep.Criar("01310-100"), "", "1000", null, "Bela Vista", "São Paulo"));
     }
 }
+
+public class MoedaTests
+{
+    [Theory]
+    [InlineData(1234.5, "R$ 1.234,50")]
+    [InlineData(0, "R$ 0,00")]
+    [InlineData(89.9, "R$ 89,90")]
+    public void Formata_em_reais_independente_da_cultura(decimal valor, string esperado)
+    {
+        Assert.Equal(esperado, Moeda.Formatar(valor));
+    }
+}

@@ -7,6 +7,7 @@ using Loja.Infrastructure.Identidade;
 using Loja.Infrastructure.Pagamentos;
 using Loja.Infrastructure.Persistencia;
 using Loja.Infrastructure.Servicos;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -45,6 +46,11 @@ public static class DependencyInjection
             .AddRoles<IdentityRole>()
             .AddEntityFrameworkStores<LojaDbContext>()
             .AddErrorDescriber<ErrosIdentityPtBr>();
+
+        // Sem isso, as chaves ficam numa pasta do contêiner e se perdem a cada deploy.
+        services.AddDataProtection()
+            .PersistKeysToDbContext<LojaDbContext>()
+            .SetApplicationName("loja-virtual");
 
         services.AddScoped<ICatalogoConsultas, CatalogoConsultas>();
         services.AddScoped<ICarrinhoServico, CarrinhoServico>();

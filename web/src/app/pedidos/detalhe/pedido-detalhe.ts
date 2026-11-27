@@ -2,13 +2,14 @@ import { CurrencyPipe, DatePipe } from '@angular/common';
 import { Component, DestroyRef, effect, inject, input, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
+import { CepPipe } from '../../core/cep.pipe';
 import { lerErro } from '../../core/erros';
 import { PedidoDetalhe as Pedido, ROTULO_STATUS, numeroPedido } from '../pedidos.models';
 import { PedidosService, irParaPagamento } from '../pedidos.service';
 
 @Component({
   selector: 'app-pedido-detalhe',
-  imports: [RouterLink, CurrencyPipe, DatePipe],
+  imports: [RouterLink, CurrencyPipe, DatePipe, CepPipe],
   templateUrl: './pedido-detalhe.html',
   styleUrls: ['../status-pedido.scss', './pedido-detalhe.scss'],
 })

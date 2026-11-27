@@ -1,3 +1,4 @@
+import { CurrencyPipe } from '@angular/common';
 import { Component, computed, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, ParamMap, Router, RouterLink } from '@angular/router';
@@ -33,7 +34,7 @@ function lerFiltro(params: ParamMap): FiltroProdutos {
 
 @Component({
   selector: 'app-vitrine',
-  imports: [RouterLink, ProdutoCard],
+  imports: [RouterLink, ProdutoCard, CurrencyPipe],
   templateUrl: './vitrine.html',
   styleUrl: './vitrine.scss',
 })
@@ -66,6 +67,13 @@ export class Vitrine {
     const f = this.filtro();
     if (f.busca) return `Resultados para "${f.busca}"`;
     return this.categorias().find((c) => c.slug === f.categoria)?.nome ?? 'Todos os produtos';
+  });
+
+  /** Faixa de preço ativa, para o título deixar claro que há um filtro aplicado. */
+  protected readonly faixaPreco = computed(() => {
+    const { precoMin, precoMax } = this.filtro();
+    if (precoMin === undefined && precoMax === undefined) return null;
+    return { min: precoMin, max: precoMax };
   });
 
   protected paginas(total: number): number[] {

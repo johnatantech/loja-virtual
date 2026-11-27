@@ -54,7 +54,7 @@ public class AdminServico(
                     Quantidade = g.Sum(i => i.Quantidade),
                     Receita = g.Sum(i => i.PrecoUnitario * i.Quantidade),
                 })
-                .OrderByDescending(m => m.Quantidade)
+                .OrderByDescending(m => m.Quantidade).ThenByDescending(m => m.Receita)
                 .Take(5)
                 .ToListAsync(ct))
             .Select(m => new MaisVendidoDto(m.ProdutoId, m.Nome ?? "", m.Quantidade, m.Receita))
