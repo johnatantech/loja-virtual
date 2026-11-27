@@ -1,6 +1,6 @@
 {
   "name": "Loja Virtual (.NET 10 + Angular + SQL Server)",
-  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+ "image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
   "features": {
     "ghcr.io/devcontainers/features/dotnet:2": { "version": "10.0" },
     "ghcr.io/devcontainers/features/node:1": { "version": "lts" },
