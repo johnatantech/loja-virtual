@@ -27,3 +27,14 @@ public class CatalogoApiTests(ApiFactory factory)
         Assert.Equal(categorias.OrderBy(c => c.Nome).Select(c => c.Nome), categorias.Select(c => c.Nome));
     }
 }
+
+[Collection("Api")]
+public class SaudeApiTests(ApiFactory factory)
+{
+    [Fact]
+    public async Task Verificacao_de_vida_responde_sem_consultar_o_banco()
+    {
+        var resposta = await factory.CreateClient().GetAsync("/health/vivo");
+        Assert.Equal(System.Net.HttpStatusCode.OK, resposta.StatusCode);
+    }
+}

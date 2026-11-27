@@ -93,6 +93,20 @@ No GitHub Actions, os três níveis rodam a cada push: o workflow sobe um SQL Se
 Angular, e o Playwright faz uma compra completa (cadastro, carrinho, checkout, pagamento) e o
 administrador envia e entrega o pedido. Todas as credenciais do CI são geradas na hora e descartadas.
 
+## Publicação (Azure, planos gratuitos)
+| Parte | Serviço | Plano |
+|-------|---------|-------|
+| Loja (Angular) | Azure Static Web Apps | Free |
+| API (.NET) | Azure App Service (Linux) | F1 Free |
+| Banco | Azure SQL Database | Oferta gratuita (pausa ao atingir o limite mensal, sem cobrança) |
+
+- **Deploy automático** (`.github/workflows/deploy.yml`): roda depois que o CI passa na `main`; o
+  login no Azure usa **OIDC**, sem nenhuma senha do Azure guardada no GitHub.
+- **Segredos só nas configurações do App Service** (conexão do banco, chave do JWT, senha do admin).
+- **IP real do visitante atrás do proxy** (`Proxy:ConfiarEmCabecalhosEncaminhados`), para o limite
+  de tentativas de login valer por pessoa, e HTTPS obrigatório com HSTS.
+- Como os planos gratuitos dormem quando ninguém usa, **o primeiro acesso pode levar até 1 minuto**.
+
 ## Decisões técnicas
 - **Regras de negócio no domínio**: produto não vende além do estoque, pedido segue uma máquina
   de estados (aguardando pagamento → pago → enviado → entregue) e itens guardam o preço do

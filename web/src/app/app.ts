@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { EH_DEMO_PUBLICADA } from './core/api-url';
 import { Cabecalho } from './layout/cabecalho/cabecalho';
 
 @Component({
@@ -12,6 +13,9 @@ import { Cabecalho } from './layout/cabecalho/cabecalho';
     </main>
     <footer class="rodape">
       Projeto de portfólio. Loja fictícia: nenhuma compra é real.
+      @if (demo) {
+        <br />Hospedada em planos gratuitos: o primeiro acesso depois de um tempo parado pode levar até 1 minuto.
+      }
     </footer>
   `,
   styles: `
@@ -21,4 +25,6 @@ import { Cabecalho } from './layout/cabecalho/cabecalho';
               font-size: 0.85rem; color: var(--texto-suave); }
   `,
 })
-export class App {}
+export class App {
+  protected readonly demo = EH_DEMO_PUBLICADA;
+}
