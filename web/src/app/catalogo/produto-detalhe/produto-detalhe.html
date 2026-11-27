@@ -1,0 +1,52 @@
+@let e = estado();
+@switch (e.tipo) {
+  @case ('carregando') {
+    <p class="mensagem">Carregando produto...</p>
+  }
+  @case ('nao-encontrado') {
+    <div class="mensagem">
+      <h1>Produto não encontrado</h1>
+      <p>Ele pode ter sido removido ou o endereço está incorreto.</p>
+      <a routerLink="/" class="botao-secundario">Voltar para a loja</a>
+    </div>
+  }
+  @case ('erro') {
+    <p class="mensagem erro" role="alert">Não foi possível carregar o produto. Tente recarregar a página.</p>
+  }
+  @case ('pronto') {
+    @if (e.tipo === 'pronto') {
+      @let p = e.dados;
+      <nav class="trilha" aria-label="Você está em">
+        <a routerLink="/">Início</a>
+        <span aria-hidden="true">/</span>
+        <a routerLink="/" [queryParams]="{ categoria: p.categoriaSlug }">{{ p.categoria }}</a>
+      </nav>
+
+      <article class="produto">
+        <app-produto-imagem [nome]="p.nome" [categoriaSlug]="p.categoriaSlug" [imagemUrl]="p.imagemUrl" />
+
+        <div class="info">
+          <h1>{{ p.nome }}</h1>
+          <p class="preco">{{ p.preco | currency }}</p>
+          <p class="parcelas">ou 3x de {{ p.preco / 3 | currency }} sem juros</p>
+
+          @if (p.estoque === 0) {
+            <p class="estoque esgotado">Esgotado</p>
+          } @else if (p.estoque <= 5) {
+            <p class="estoque poucas">Últimas {{ p.estoque }} unidades</p>
+          } @else {
+            <p class="estoque">Em estoque</p>
+          }
+
+          <button type="button" class="botao-principal" disabled title="O carrinho chega na fase 3">
+            Adicionar ao carrinho
+          </button>
+          <p class="aviso-fase">O carrinho e o checkout chegam nas próximas fases do projeto.</p>
+
+          <h2>Descrição</h2>
+          <p class="descricao">{{ p.descricao }}</p>
+        </div>
+      </article>
+    }
+  }
+}

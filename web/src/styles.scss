@@ -1,1 +1,103 @@
-/* You can add global styles to this file, and also import other style files */
+:root {
+  --texto: #16202a;
+  --texto-suave: #5b6672;
+  --superficie: #ffffff;
+  --superficie-2: #f2f4f6;
+  --borda: #e1e5e9;
+  --destaque: #0f6e5b;
+  --destaque-escuro: #0b5546;
+  --atencao: #9a5b00;
+  --alerta: #b42318;
+  --raio-sm: 6px;
+  --largura: 1180px;
+  color-scheme: light;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'Manrope', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--texto);
+  background: var(--superficie);
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: var(--destaque);
+}
+
+input,
+select {
+  font: inherit;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-sm);
+  background: var(--superficie);
+  color: var(--texto);
+  min-width: 0;
+}
+
+:focus-visible {
+  outline: 2px solid var(--destaque);
+  outline-offset: 2px;
+}
+
+.botao-principal,
+.botao-secundario {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0.6rem 1.1rem;
+  border-radius: var(--raio-sm);
+  font: inherit;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.botao-principal {
+  border: 1px solid var(--destaque);
+  background: var(--destaque);
+  color: #fff;
+
+  &:hover:not(:disabled) {
+    background: var(--destaque-escuro);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.botao-secundario {
+  border: 1px solid var(--borda);
+  background: var(--superficie);
+  color: var(--texto);
+
+  &:hover {
+    background: var(--superficie-2);
+  }
+}
+
+.visualmente-oculto {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}

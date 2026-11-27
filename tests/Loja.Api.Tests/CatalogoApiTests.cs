@@ -4,7 +4,8 @@ using Loja.Application.Catalogo;
 
 namespace Loja.Api.Tests;
 
-public class CatalogoApiTests(ApiFactory factory) : IClassFixture<ApiFactory>
+[Collection("Api")]
+public class CatalogoApiTests(ApiFactory factory)
 {
     private readonly HttpClient _client = factory.CreateClient();
 

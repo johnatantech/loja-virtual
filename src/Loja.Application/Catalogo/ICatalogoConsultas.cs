@@ -7,4 +7,6 @@ namespace Loja.Application.Catalogo;
 public interface ICatalogoConsultas
 {
     Task<IReadOnlyList<CategoriaDto>> ListarCategoriasAsync(CancellationToken ct = default);
+    Task<Pagina<ProdutoResumoDto>> ListarProdutosAsync(FiltroProdutos filtro, CancellationToken ct = default);
+    Task<ProdutoDetalheDto?> ObterProdutoAsync(string slug, CancellationToken ct = default);
 }

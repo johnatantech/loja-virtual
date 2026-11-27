@@ -1,0 +1,103 @@
+<div class="vitrine">
+  <aside class="filtros" aria-label="Filtros">
+    <section>
+      <h2>Categorias</h2>
+      <ul>
+        <li>
+          <a [routerLink]="[]" [queryParams]="{ categoria: null, pagina: null }" queryParamsHandling="merge"
+             [class.ativo]="!filtro().categoria">Todas</a>
+        </li>
+        @for (categoria of categorias(); track categoria.id) {
+          <li>
+            <a [routerLink]="[]" [queryParams]="{ categoria: categoria.slug, pagina: null }" queryParamsHandling="merge"
+               [class.ativo]="filtro().categoria === categoria.slug">
+              {{ categoria.nome }} <span class="contagem">{{ categoria.quantidadeProdutos }}</span>
+            </a>
+          </li>
+        }
+      </ul>
+    </section>
+
+    <section>
+      <h2>Preço</h2>
+      <form class="preco" (submit)="$event.preventDefault(); aplicarPreco(min.value, max.value)">
+        <label>
+          Mínimo
+          <input #min type="number" min="0" step="1" inputmode="numeric" placeholder="R$ 0"
+                 [value]="filtro().precoMin ?? ''" />
+        </label>
+        <label>
+          Máximo
+          <input #max type="number" min="0" step="1" inputmode="numeric" placeholder="Sem limite"
+                 [value]="filtro().precoMax ?? ''" />
+        </label>
+        <button type="submit" class="botao-secundario">Aplicar</button>
+      </form>
+    </section>
+
+    @if (temFiltros()) {
+      <a routerLink="/" class="limpar">Limpar filtros</a>
+    }
+  </aside>
+
+  <section class="resultados" aria-live="polite">
+    <header class="resultados-topo">
+      <div>
+        <h1>{{ titulo() }}</h1>
+        @if (estado(); as e) {
+          @if (e.tipo === 'pronto') {
+            <p class="total">{{ e.dados.total }} {{ e.dados.total === 1 ? 'produto' : 'produtos' }}</p>
+          }
+        }
+      </div>
+      <label class="ordenar">
+        Ordenar por
+        <select [value]="filtro().ordenacao ?? 'nome'" (change)="ordenar($any($event.target).value)">
+          @for (o of ordenacoes; track o.valor) {
+            <option [value]="o.valor">{{ o.rotulo }}</option>
+          }
+        </select>
+      </label>
+    </header>
+
+    @let e = estado();
+    @switch (e.tipo) {
+      @case ('carregando') {
+        <p class="mensagem">Carregando produtos...</p>
+      }
+      @case ('erro') {
+        <p class="mensagem erro" role="alert">Não foi possível carregar os produtos. Tente recarregar a página.</p>
+      }
+      @case ('pronto') {
+        @if (e.tipo === 'pronto') {
+          @if (e.dados.itens.length === 0) {
+            <div class="mensagem vazio">
+              <p>Nenhum produto encontrado com esses filtros.</p>
+              <a routerLink="/" class="botao-secundario">Ver todos os produtos</a>
+            </div>
+          } @else {
+            <ul class="grade">
+              @for (produto of e.dados.itens; track produto.id) {
+                <li><app-produto-card [produto]="produto" /></li>
+              }
+            </ul>
+
+            @if (e.dados.totalPaginas > 1) {
+              <nav class="paginacao" aria-label="Paginação">
+                <button type="button" [disabled]="e.dados.numeroPagina === 1"
+                        (click)="irParaPagina(e.dados.numeroPagina - 1)">Anterior</button>
+                @for (p of paginas(e.dados.totalPaginas); track p) {
+                  <button type="button" [class.atual]="p === e.dados.numeroPagina"
+                          [attr.aria-current]="p === e.dados.numeroPagina ? 'page' : null"
+                          (click)="irParaPagina(p)">{{ p }}</button>
+                }
+                <button type="button" [disabled]="e.dados.numeroPagina === e.dados.totalPaginas"
+                        (click)="irParaPagina(e.dados.numeroPagina + 1)">Próxima</button>
+              </nav>
+            }
+          }
+        }
+      }
+    }
+  </section>
+</div>

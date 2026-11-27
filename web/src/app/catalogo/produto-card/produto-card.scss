@@ -1,0 +1,44 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  height: 100%;
+  color: inherit;
+  text-decoration: none;
+
+  &:hover h3,
+  &:focus-visible h3 {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+}
+
+app-produto-imagem {
+  margin-bottom: 0.5rem;
+}
+
+.categoria {
+  font-size: 0.8rem;
+  color: var(--texto-suave);
+}
+
+h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.preco {
+  margin: auto 0 0;
+  padding-top: 0.25rem;
+  font-size: 1.15rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.esgotado {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--alerta);
+}

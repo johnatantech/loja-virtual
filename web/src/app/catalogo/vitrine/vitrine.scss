@@ -1,0 +1,203 @@
+.vitrine {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  gap: 2.5rem;
+
+  > * {
+    min-width: 0; // deixa a faixa de categorias rolar em vez de alargar a página
+  }
+
+  @media (max-width: 760px) {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+}
+
+.filtros {
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+
+  h2 {
+    margin: 0 0 0.6rem;
+    font-size: 0.95rem;
+  }
+
+  ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+  }
+
+  ul a {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.35rem 0.5rem;
+    margin-left: -0.5rem;
+    border-radius: var(--raio-sm);
+    color: var(--texto);
+    text-decoration: none;
+
+    &:hover {
+      background: var(--superficie-2);
+    }
+
+    &.ativo {
+      font-weight: 700;
+      color: var(--destaque);
+    }
+  }
+}
+
+.contagem {
+  color: var(--texto-suave);
+  font-variant-numeric: tabular-nums;
+}
+
+.preco {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+
+  input {
+    width: 100%;
+  }
+
+  label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    font-size: 0.8rem;
+    color: var(--texto-suave);
+  }
+
+  button {
+    grid-column: 1 / -1;
+  }
+}
+
+.limpar {
+  font-size: 0.9rem;
+}
+
+.resultados-topo {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+
+  h1 {
+    margin: 0;
+    font-size: clamp(1.5rem, 3vw, 2rem);
+    letter-spacing: -0.02em;
+  }
+}
+
+.total {
+  margin: 0.25rem 0 0;
+  color: var(--texto-suave);
+}
+
+.ordenar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--texto-suave);
+}
+
+.grade {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 2rem 1.5rem;
+}
+
+.mensagem {
+  padding: 3rem 0;
+  color: var(--texto-suave);
+
+  &.erro {
+    color: var(--alerta);
+  }
+}
+
+.vazio {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1rem;
+
+  p {
+    margin: 0;
+  }
+}
+
+.paginacao {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 2.5rem;
+
+  button {
+    min-width: 2.5rem;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--borda);
+    border-radius: var(--raio-sm);
+    background: var(--superficie);
+    font: inherit;
+    cursor: pointer;
+
+    &.atual {
+      background: var(--texto);
+      border-color: var(--texto);
+      color: var(--superficie);
+    }
+
+    &:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+  }
+}
+
+// No celular, as categorias viram uma faixa rolável e a grade passa a ter duas colunas,
+// para os produtos aparecerem logo na primeira tela.
+@media (max-width: 760px) {
+  .filtros {
+    gap: 1rem;
+
+    ul {
+      flex-direction: row;
+      gap: 0.4rem;
+      overflow-x: auto;
+      padding-bottom: 0.25rem;
+      scrollbar-width: none;
+    }
+
+    ul a {
+      margin-left: 0;
+      gap: 0.4rem;
+      white-space: nowrap;
+      border: 1px solid var(--borda);
+      border-radius: 999px;
+      padding: 0.35rem 0.8rem;
+
+      &.ativo {
+        border-color: var(--destaque);
+      }
+    }
+  }
+
+  .grade {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.5rem 1rem;
+  }
+}

@@ -13,7 +13,7 @@ bem testadas, segurança e arquitetura organizada**.
 | Front-end | Angular 22 (standalone components, signals) |
 | API | ASP.NET Core (.NET 10 LTS), Minimal APIs, OpenAPI + Scalar |
 | Dados | SQL Server 2022, Entity Framework Core 10 |
-| Testes | xUnit, Testcontainers (SQL Server real), Vitest |
+| Testes | xUnit, Testcontainers (SQL Server real), Vitest + Angular Testing |
 | Ambiente | GitHub Codespaces / Dev Containers, Docker Compose |
 
 ## Arquitetura
@@ -30,7 +30,7 @@ web/ (Angular)  →  Loja.Api  →  Loja.Application  →  Loja.Domain
 | Fase | Entrega | Status |
 |------|---------|--------|
 | 1 | Fundação: solução, domínio, banco, Codespaces, integração front ↔ API | ✅ |
-| 2 | Catálogo: busca, filtros, paginação e página de produto | ⏳ |
+| 2 | Catálogo: busca, filtros, paginação e página de produto | ✅ |
 | 3 | Contas e carrinho: autenticação JWT e carrinho persistido | ⏳ |
 | 4 | Checkout: pedido, Mercado Pago (sandbox), webhook idempotente, estoque | ⏳ |
 | 5 | Painel administrativo: produtos, estoque, pedidos e dashboard | ⏳ |
@@ -69,10 +69,22 @@ cd web && npm test          # front-end
 - **Testes de integração contra SQL Server real** (Testcontainers), não um banco em memória que
   se comporta diferente do de produção.
 - **Erros de negócio viram HTTP 400** com ProblemDetails, em vez de erro 500 genérico.
+- **Filtros na URL**: busca, categoria, preço, ordenação e página ficam na query string, então
+  dá para recarregar, usar o botão voltar e compartilhar um link já filtrado.
+- **Validação dos filtros na API**: página, tamanho, faixa de preço e ordenação inválidos
+  retornam 400 com os erros por campo, em vez de consultas imprevisíveis no banco.
+- **Ordenação estável na paginação**: o desempate pelo Id garante que um produto nunca apareça
+  em duas páginas nem suma entre elas.
+- **Estados de tela explícitos** no Angular (carregando, pronto, não encontrado, erro) em um
+  único tipo, em vez de várias flags que podem se contradizer.
+- **Um SQL Server para toda a suíte de integração** (coleção do xUnit), em vez de um contêiner
+  por classe de teste.
 
 ## Endpoints atuais
 | Método | Rota | Descrição |
 |--------|------|-----------|
 | GET | `/api/categorias` | Categorias com a quantidade de produtos ativos |
+| GET | `/api/produtos` | Produtos com `busca`, `categoria`, `precoMin`, `precoMax`, `ordenacao` (`nome`, `menor-preco`, `maior-preco`), `pagina` e `tamanhoPagina` |
+| GET | `/api/produtos/{slug}` | Detalhes de um produto (404 se não existir) |
 | GET | `/health` | Saúde da API e conexão com o banco |
 | GET | `/scalar` | Documentação interativa (só em desenvolvimento) |
