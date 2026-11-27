@@ -1,0 +1,108 @@
+<h1>Finalizar compra</h1>
+
+@let c = carrinho.carrinho();
+@if (c.itens.length === 0 && !carrinho.carregando()) {
+  <div class="vazio">
+    <p>Seu carrinho está vazio.</p>
+    <a routerLink="/" class="botao-principal">Ver produtos</a>
+  </div>
+} @else {
+  <div class="layout">
+    <form [formGroup]="form" (ngSubmit)="finalizar()" novalidate>
+      <h2>Endereço de entrega</h2>
+
+      <label class="cep">
+        CEP
+        <input formControlName="cep" inputmode="numeric" maxlength="9" placeholder="00000-000" autocomplete="postal-code"
+               [attr.aria-invalid]="invalido('cep')" (input)="aoDigitarCep($any($event.target).value)" />
+        @if (buscandoCep()) {
+          <span class="dica">Buscando endereço...</span>
+        } @else if (avisoCep(); as aviso) {
+          <span class="dica aviso">{{ aviso }}</span>
+        } @else if (invalido('cep')) {
+          <span class="erro-campo">Informe um CEP com 8 dígitos.</span>
+        }
+      </label>
+
+      <label>
+        Nome de quem vai receber
+        <input formControlName="destinatario" autocomplete="name" [attr.aria-invalid]="invalido('destinatario')" />
+      </label>
+
+      <label>
+        Rua
+        <input formControlName="logradouro" autocomplete="address-line1" [attr.aria-invalid]="invalido('logradouro')" />
+      </label>
+
+      <div class="linha">
+        <label>
+          Número
+          <input formControlName="numero" [attr.aria-invalid]="invalido('numero')" />
+        </label>
+        <label>
+          <span>Complemento <span class="opcional">(opcional)</span></span>
+          <input formControlName="complemento" autocomplete="address-line2" />
+        </label>
+      </div>
+
+      <label>
+        Bairro
+        <input formControlName="bairro" [attr.aria-invalid]="invalido('bairro')" />
+      </label>
+
+      <div class="linha cidade">
+        <label>
+          Cidade
+          <input formControlName="cidade" autocomplete="address-level2" [attr.aria-invalid]="invalido('cidade')" />
+        </label>
+        <label>
+          UF
+          <input formControlName="uf" />
+        </label>
+      </div>
+
+      @if (form.touched && form.invalid) {
+        <p class="erro-campo">Preencha os campos destacados.</p>
+      }
+    </form>
+
+    <aside class="resumo" aria-label="Resumo do pedido">
+      <h2>Resumo</h2>
+      <ul>
+        @for (item of c.itens; track item.produtoId) {
+          <li>
+            <span>{{ item.quantidade }}× {{ item.nome }}</span>
+            <span>{{ item.subtotal | currency }}</span>
+          </li>
+        }
+      </ul>
+      <p class="linha-valor"><span>Subtotal</span><span>{{ c.total | currency }}</span></p>
+      <p class="linha-valor">
+        <span>Frete</span>
+        @if (frete(); as f) {
+          <span>{{ f.freteGratis ? 'Grátis' : (f.valorFrete | currency) }}</span>
+        } @else {
+          <span class="suave">Informe o CEP</span>
+        }
+      </p>
+      @if (frete(); as f) {
+        <p class="prazo">Entrega em até {{ f.prazoDias }} dias úteis</p>
+      }
+      <p class="linha-valor total"><span>Total</span><span>{{ (frete()?.total ?? c.total) | currency }}</span></p>
+
+      @if (erro(); as mensagem) {
+        <p class="alerta" role="alert">{{ mensagem }}</p>
+      }
+
+      <button type="button" class="botao-principal" (click)="finalizar()"
+              [disabled]="enviando() || !frete() || !c.podeFinalizar">
+        {{ enviando() ? 'Fechando pedido...' : 'Ir para o pagamento' }}
+      </button>
+      @if (!c.podeFinalizar && c.itens.length > 0) {
+        <p class="nota">Há itens com aviso no carrinho. <a routerLink="/carrinho">Revise o carrinho</a>.</p>
+      } @else {
+        <p class="nota">Frete grátis em compras a partir de R$ 299,00.</p>
+      }
+    </aside>
+  </div>
+}

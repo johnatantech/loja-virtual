@@ -12,14 +12,16 @@ public class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
 {
     private readonly MsSqlContainer _banco = new MsSqlBuilder("mcr.microsoft.com/mssql/server:2022-latest").Build();
 
+    // Chave só de teste, a mesma para todas as variações desta factory; a real fica em user-secrets.
+    private readonly string _chaveJwt = Convert.ToBase64String(Guid.NewGuid().ToByteArray()) + Guid.NewGuid();
+
     public async Task InitializeAsync() => await _banco.StartAsync();
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Development"); // aplica migrations e dados iniciais
         builder.UseSetting("ConnectionStrings:Loja", _banco.GetConnectionString());
-        // Chave só de teste, gerada a cada execução; a real fica em user-secrets.
-        builder.UseSetting("Jwt:Chave", Convert.ToBase64String(Guid.NewGuid().ToByteArray()) + Guid.NewGuid());
+        builder.UseSetting("Jwt:Chave", _chaveJwt);
         // Os testes fazem muitos logins seguidos; o limite real continua valendo fora deles.
         builder.UseSetting("Seguranca:TentativasPorMinuto", "1000");
     }

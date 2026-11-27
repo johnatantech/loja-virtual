@@ -1,13 +1,16 @@
 using Loja.Application.Carrinhos;
 using Loja.Application.Catalogo;
+using Loja.Application.Pedidos;
 using Loja.Infrastructure.Consultas;
 using Loja.Infrastructure.Identidade;
+using Loja.Infrastructure.Pagamentos;
 using Loja.Infrastructure.Persistencia;
 using Loja.Infrastructure.Servicos;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Loja.Infrastructure;
 
@@ -44,6 +47,23 @@ public static class DependencyInjection
 
         services.AddScoped<ICatalogoConsultas, CatalogoConsultas>();
         services.AddScoped<ICarrinhoServico, CarrinhoServico>();
+        services.AddScoped<IPedidoServico, PedidoServico>();
+        services.TryAddSingleton(TimeProvider.System);
+
+        // Gateway de pagamento escolhido por configuração: "Simulado" (padrão) ou "MercadoPago".
+        services.Configure<MercadoPagoOpcoes>(config.GetSection(MercadoPagoOpcoes.Secao));
+        if (string.Equals(config["Pagamentos:Gateway"], "MercadoPago", StringComparison.OrdinalIgnoreCase))
+        {
+            services.AddHttpClient<IGatewayPagamento, GatewayMercadoPago>(c =>
+            {
+                c.BaseAddress = new Uri("https://api.mercadopago.com/");
+                c.Timeout = TimeSpan.FromSeconds(15);
+            });
+        }
+        else
+        {
+            services.AddSingleton<IGatewayPagamento, GatewaySimulado>();
+        }
         return services;
     }
 }

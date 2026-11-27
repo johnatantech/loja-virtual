@@ -1,9 +1,10 @@
 import { Component, inject } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
 
 @Component({
   selector: 'app-minha-conta',
+  imports: [RouterLink],
   template: `
     @if (auth.usuario(); as usuario) {
       <h1>Olá, {{ usuario.nome }}</h1>
@@ -15,7 +16,8 @@ import { AuthService } from '../../core/auth/auth.service';
       </dl>
       <section>
         <h2>Meus pedidos</h2>
-        <p class="vazio">O histórico de pedidos chega na fase 4, junto com o checkout.</p>
+        <p class="vazio">Acompanhe o status e os detalhes das suas compras.</p>
+        <a routerLink="/pedidos" class="botao-secundario">Ver meus pedidos</a>
       </section>
       <button type="button" class="botao-secundario" (click)="sair()">Sair da conta</button>
     }
@@ -27,7 +29,8 @@ import { AuthService } from '../../core/auth/auth.service';
     dt { color: var(--texto-suave); }
     dd { margin: 0; font-weight: 600; }
     h2 { font-size: 1.1rem; margin: 0 0 0.5rem; }
-    .vazio { color: var(--texto-suave); margin: 0 0 2rem; }
+    .vazio { color: var(--texto-suave); margin: 0 0 0.75rem; }
+    section { margin-bottom: 2.5rem; }
   `,
 })
 export class MinhaConta {

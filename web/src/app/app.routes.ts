@@ -28,6 +28,30 @@ export const routes: Routes = [
     loadComponent: () => import('./contas/cadastro/cadastro').then((m) => m.Cadastro),
   },
   {
+    path: 'checkout',
+    title: 'Finalizar compra | Loja Virtual',
+    canActivate: [authGuard],
+    loadComponent: () => import('./pedidos/checkout/checkout').then((m) => m.Checkout),
+  },
+  {
+    path: 'pedidos',
+    title: 'Meus pedidos | Loja Virtual',
+    canActivate: [authGuard],
+    loadComponent: () => import('./pedidos/lista/pedidos-lista').then((m) => m.PedidosLista),
+  },
+  {
+    path: 'pedidos/:id',
+    title: 'Pedido | Loja Virtual',
+    canActivate: [authGuard],
+    loadComponent: () => import('./pedidos/detalhe/pedido-detalhe').then((m) => m.PedidoDetalhe),
+  },
+  {
+    path: 'pagamento-simulado/:id',
+    title: 'Pagamento | Loja Virtual',
+    canActivate: [authGuard],
+    loadComponent: () => import('./pedidos/pagamento-simulado/pagamento-simulado').then((m) => m.PagamentoSimulado),
+  },
+  {
     path: 'minha-conta',
     title: 'Minha conta | Loja Virtual',
     canActivate: [authGuard],

@@ -32,7 +32,7 @@ web/ (Angular)  →  Loja.Api  →  Loja.Application  →  Loja.Domain
 | 1 | Fundação: solução, domínio, banco, Codespaces, integração front ↔ API | ✅ |
 | 2 | Catálogo: busca, filtros, paginação e página de produto | ✅ |
 | 3 | Contas e carrinho: autenticação JWT e carrinho persistido | ✅ |
-| 4 | Checkout: pedido, Mercado Pago (sandbox), webhook idempotente, estoque | ⏳ |
+| 4 | Checkout: pedido, Mercado Pago (sandbox), webhook idempotente, estoque | ✅ |
 | 5 | Painel administrativo: produtos, estoque, pedidos e dashboard | ⏳ |
 | 6 | Qualidade e deploy: testes E2E (Playwright), CI/CD e publicação | ⏳ |
 
@@ -50,6 +50,26 @@ web/ (Angular)  →  Loja.Api  →  Loja.Application  →  Loja.Domain
 
 ### Localmente
 Requer .NET 10 SDK, Node.js LTS e Docker. Rode `bash scripts/setup-dev.sh` e siga o passo 3.
+
+### Pagamento com Mercado Pago (opcional)
+Por padrão a loja usa o **pagamento simulado**. Para usar o sandbox do Mercado Pago:
+
+1. Em [Suas integrações](https://www.mercadopago.com.br/developers/panel/app), crie uma aplicação
+   do tipo Checkout Pro e copie o **Access Token de teste**.
+2. Guarde as configurações nos user-secrets da API (nunca no código):
+   ```bash
+   cd src/Loja.Api
+   dotnet user-secrets set "Pagamentos:Gateway" "MercadoPago"
+   dotnet user-secrets set "MercadoPago:AccessToken" "TEST-..."
+   dotnet user-secrets set "MercadoPago:UrlLoja" "<endereço público da porta 4200>"
+   ```
+3. Para receber o webhook, a API precisa de um endereço público. No Codespaces, torne a porta
+   5120 pública (aba **Portas**, botão direito, **Visibilidade da porta**, **Pública**), defina
+   `MercadoPago:UrlPublicaApi` com esse endereço e, no painel da aplicação, em **Webhooks**,
+   cadastre `<endereço>/api/pagamentos/webhook/mercadopago` com o evento **Pagamentos**.
+   Copie a **assinatura secreta** gerada para `MercadoPago:SegredoWebhook`.
+4. Pague com uma conta compradora de teste e os cartões de teste do Mercado Pago.
+5. Ao terminar, volte a porta 5120 para **Privada**.
 
 ### Testes
 ```bash
@@ -91,6 +111,22 @@ cd web && npm test          # front-end
   estoque vêm do catálogo a cada leitura, com avisos quando algo mudou (esgotou, poucas unidades).
 - **Redirecionamento seguro após o login**: só caminhos internos são aceitos, evitando que um
   link malicioso leve o usuário para outro site (*open redirect*).
+- **Gateway de pagamento atrás de uma interface** (`IGatewayPagamento`): o simulado é o padrão
+  (desenvolvimento, testes e demo funcionam sem conta externa) e o Mercado Pago é ativado por
+  configuração. Trocar de gateway não muda nada no fluxo do pedido.
+- **Dados de cartão nunca passam pela loja**: o cliente paga na página do Mercado Pago
+  (Checkout Pro), o que dispensa as exigências do PCI DSS.
+- **Webhook seguro e idempotente**: a assinatura HMAC-SHA256 (`x-signature`) é conferida em tempo
+  constante; o pagamento é sempre consultado na API do gateway (nunca se confia no corpo da
+  notificação); o valor pago precisa bater com o total; e a mesma notificação repetida não
+  confirma o pedido duas vezes (índice único no id do pagamento).
+- **Estoque sem venda dupla**: pedido, baixa de estoque e carrinho vazio são gravados na mesma
+  transação; se duas compras disputam a última unidade, o `rowversion` detecta o conflito e a
+  operação é refeita com o estoque atualizado. Um teste dispara compras simultâneas para provar.
+- **Frete pela faixa do CEP, não pela UF digitada**: o cliente não consegue pagar menos frete
+  informando outro estado.
+- **Pedido guarda preços e endereço do momento da compra**, imunes a mudanças posteriores.
+- **Datas sempre em UTC** no banco e na API; o navegador mostra no fuso de quem acessa.
 - **Um SQL Server para toda a suíte de integração** (coleção do xUnit), em vez de um contêiner
   por classe de teste.
 
@@ -109,6 +145,14 @@ cd web && npm test          # front-end
 | DELETE | `/api/carrinho/itens/{produtoId}` | Remove um produto 🔒 |
 | POST | `/api/carrinho/mesclar` | Junta o carrinho de visitante ao da conta 🔒 |
 | DELETE | `/api/carrinho` | Esvazia o carrinho 🔒 |
+| GET | `/api/checkout/frete?cep=` | Frete do carrinho atual para um CEP 🔒 |
+| POST | `/api/pedidos` | Fecha o pedido a partir do carrinho e devolve o link de pagamento 🔒 |
+| GET | `/api/pedidos` | Pedidos do cliente 🔒 |
+| GET | `/api/pedidos/{id}` | Detalhes de um pedido (404 para pedidos de outras pessoas) 🔒 |
+| POST | `/api/pedidos/{id}/cancelar` | Cancela um pedido não pago e devolve o estoque 🔒 |
+| POST | `/api/pedidos/{id}/pagamento` | Gera de novo o link de pagamento 🔒 |
+| POST | `/api/pagamentos/webhook/mercadopago` | Notificações do Mercado Pago (exige assinatura válida) |
+| POST | `/api/pagamentos/simulado/{id}` | Aprova ou recusa um pagamento no gateway simulado 🔒 |
 | GET | `/health` | Saúde da API e conexão com o banco |
 | GET | `/scalar` | Documentação interativa (só em desenvolvimento) |
 

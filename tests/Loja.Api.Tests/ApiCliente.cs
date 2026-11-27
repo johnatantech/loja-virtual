@@ -1,6 +1,7 @@
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using Loja.Api.Autenticacao;
+using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace Loja.Api.Tests;
 
@@ -11,7 +12,7 @@ public static class ApiCliente
 
     public static string EmailUnico() => $"teste-{Guid.NewGuid():N}@exemplo.com";
 
-    public static async Task<(HttpClient Cliente, SessaoDto Sessao)> CriarContaAsync(this ApiFactory factory)
+    public static async Task<(HttpClient Cliente, SessaoDto Sessao)> CriarContaAsync(this WebApplicationFactory<Program> factory)
     {
         var cliente = factory.CreateClient();
         var resposta = await cliente.PostAsJsonAsync("/api/contas/cadastro",

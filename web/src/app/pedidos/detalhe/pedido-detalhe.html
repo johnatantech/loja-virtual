@@ -1,0 +1,63 @@
+@if (naoEncontrado()) {
+  <h1>Pedido não encontrado</h1>
+  <p class="suave">Confira o endereço ou veja a lista dos seus pedidos.</p>
+  <a routerLink="/pedidos" class="botao-secundario">Meus pedidos</a>
+} @else if (pedido(); as p) {
+  <nav class="trilha"><a routerLink="/pedidos">Meus pedidos</a> <span aria-hidden="true">/</span> {{ numero(p.id) }}</nav>
+
+  <header class="topo">
+    <div>
+      <h1>Pedido {{ numero(p.id) }}</h1>
+      <p class="suave">Feito em {{ p.criadoEm | date: "dd/MM/yyyy 'às' HH:mm" }}</p>
+    </div>
+    <span class="status grande" [class]="p.status">{{ rotulos[p.status] }}</span>
+  </header>
+
+  @if (aguardandoConfirmacao()) {
+    <p class="info" role="status">Recebemos você de volta. Aguardando a confirmação do pagamento...</p>
+  }
+  @if (erro(); as mensagem) {
+    <p class="alerta" role="alert">{{ mensagem }}</p>
+  }
+
+  @if (p.status === 'AguardandoPagamento') {
+    <div class="acoes">
+      <button type="button" class="botao-principal" [disabled]="ocupado()" (click)="pagar(p)">Pagar agora</button>
+      <button type="button" class="botao-secundario" [disabled]="ocupado()" (click)="cancelar(p)">Cancelar pedido</button>
+    </div>
+  } @else if (p.status === 'Pago') {
+    <p class="info sucesso">Pagamento confirmado{{ p.pagoEm ? ' em ' + (p.pagoEm | date: 'dd/MM/yyyy HH:mm') : '' }}.
+      Previsão de entrega em até {{ p.prazoEntregaDias }} dias úteis.</p>
+  }
+
+  <div class="grade">
+    <section>
+      <h2>Itens</h2>
+      <ul class="itens">
+        @for (item of p.itens; track item.produtoId) {
+          <li>
+            <span>{{ item.quantidade }}× {{ item.nome }}</span>
+            <span>{{ item.subtotal | currency }}</span>
+          </li>
+        }
+      </ul>
+      <p class="valor"><span>Subtotal</span><span>{{ p.subtotal | currency }}</span></p>
+      <p class="valor"><span>Frete</span><span>{{ p.valorFrete === 0 ? 'Grátis' : (p.valorFrete | currency) }}</span></p>
+      <p class="valor total"><span>Total</span><span>{{ p.total | currency }}</span></p>
+    </section>
+
+    @if (p.endereco; as e) {
+      <section>
+        <h2>Entrega</h2>
+        <address>
+          {{ e.destinatario }}<br />
+          {{ e.logradouro }}, {{ e.numero }}{{ e.complemento ? ' - ' + e.complemento : '' }}<br />
+          {{ e.bairro }} - {{ e.cidade }}/{{ e.uf }}<br />
+          CEP {{ e.cep.slice(0, 5) }}-{{ e.cep.slice(5) }}
+        </address>
+      </section>
+    }
+  </div>
+} @else {
+  <p class="suave">Carregando pedido...</p>
+}

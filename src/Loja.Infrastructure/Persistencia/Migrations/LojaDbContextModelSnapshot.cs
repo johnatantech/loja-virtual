@@ -147,16 +147,41 @@ namespace Loja.Infrastructure.Persistencia.Migrations
                     b.Property<DateTime>("CriadoEm")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("LinkPagamento")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("PagamentoExternoId")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime?>("PagoEm")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("PrazoEntregaDias")
+                        .HasColumnType("int");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(30)
                         .HasColumnType("nvarchar(30)");
 
+                    b.Property<decimal>("ValorFrete")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("decimal(10,2)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("ClienteId");
 
-                    b.ToTable("Pedidos", (string)null);
+                    b.HasIndex("PagamentoExternoId")
+                        .IsUnique()
+                        .HasFilter("[PagamentoExternoId] IS NOT NULL");
+
+                    b.ToTable("Pedidos", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_Pedidos_ValorFrete", "[ValorFrete] >= 0");
+                        });
                 });
 
             modelBuilder.Entity("Loja.Infrastructure.Identidade.Usuario", b =>
@@ -413,6 +438,66 @@ namespace Loja.Infrastructure.Persistencia.Migrations
 
             modelBuilder.Entity("Loja.Domain.Pedidos.Pedido", b =>
                 {
+                    b.OwnsOne("Loja.Domain.Entrega.EnderecoEntrega", "Endereco", b1 =>
+                        {
+                            b1.Property<Guid>("PedidoId")
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.Property<string>("Bairro")
+                                .IsRequired()
+                                .HasMaxLength(80)
+                                .HasColumnType("nvarchar(80)")
+                                .HasColumnName("EntregaBairro");
+
+                            b1.Property<string>("Cep")
+                                .IsRequired()
+                                .HasMaxLength(8)
+                                .HasColumnType("nvarchar(8)")
+                                .HasColumnName("EntregaCep");
+
+                            b1.Property<string>("Cidade")
+                                .IsRequired()
+                                .HasMaxLength(80)
+                                .HasColumnType("nvarchar(80)")
+                                .HasColumnName("EntregaCidade");
+
+                            b1.Property<string>("Complemento")
+                                .HasMaxLength(60)
+                                .HasColumnType("nvarchar(60)")
+                                .HasColumnName("EntregaComplemento");
+
+                            b1.Property<string>("Destinatario")
+                                .IsRequired()
+                                .HasMaxLength(100)
+                                .HasColumnType("nvarchar(100)")
+                                .HasColumnName("EntregaDestinatario");
+
+                            b1.Property<string>("Logradouro")
+                                .IsRequired()
+                                .HasMaxLength(150)
+                                .HasColumnType("nvarchar(150)")
+                                .HasColumnName("EntregaLogradouro");
+
+                            b1.Property<string>("Numero")
+                                .IsRequired()
+                                .HasMaxLength(20)
+                                .HasColumnType("nvarchar(20)")
+                                .HasColumnName("EntregaNumero");
+
+                            b1.Property<string>("Uf")
+                                .IsRequired()
+                                .HasMaxLength(2)
+                                .HasColumnType("nvarchar(2)")
+                                .HasColumnName("EntregaUf");
+
+                            b1.HasKey("PedidoId");
+
+                            b1.ToTable("Pedidos");
+
+                            b1.WithOwner()
+                                .HasForeignKey("PedidoId");
+                        });
+
                     b.OwnsMany("Loja.Domain.Pedidos.ItemPedido", "Itens", b1 =>
                         {
                             b1.Property<int>("Id")
@@ -448,6 +533,8 @@ namespace Loja.Infrastructure.Persistencia.Migrations
                             b1.WithOwner()
                                 .HasForeignKey("PedidoId");
                         });
+
+                    b.Navigation("Endereco");
 
                     b.Navigation("Itens");
                 });

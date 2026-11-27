@@ -56,10 +56,12 @@
       <p class="linha total"><span>Total</span><span>{{ c.total | currency }}</span></p>
 
       @if (auth.logado()) {
-        <button type="button" class="botao-principal" disabled title="O checkout chega na fase 4">
-          Finalizar compra
-        </button>
-        <p class="nota">O checkout com pagamento chega na fase 4 do projeto.</p>
+        @if (c.podeFinalizar) {
+          <a routerLink="/checkout" class="botao-principal">Finalizar compra</a>
+        } @else {
+          <button type="button" class="botao-principal" disabled>Finalizar compra</button>
+          <p class="nota">Ajuste os itens com aviso para continuar.</p>
+        }
       } @else {
         <a routerLink="/entrar" [queryParams]="{ retorno: '/carrinho' }" class="botao-principal">Entrar para finalizar</a>
         <p class="nota">Os itens do carrinho continuam com você depois de entrar.</p>

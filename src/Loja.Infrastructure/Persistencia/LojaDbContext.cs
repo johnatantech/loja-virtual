@@ -14,6 +14,12 @@ public class LojaDbContext(DbContextOptions<LojaDbContext> options) : IdentityDb
     public DbSet<Pedido> Pedidos => Set<Pedido>();
     public DbSet<Carrinho> Carrinhos => Set<Carrinho>();
 
+    protected override void ConfigureConventions(ModelConfigurationBuilder configuracao)
+    {
+        configuracao.Properties<DateTime>().HaveConversion<ConversorDataUtc>();
+        configuracao.Properties<DateTime?>().HaveConversion<ConversorDataUtc>();
+    }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder); // tabelas do Identity

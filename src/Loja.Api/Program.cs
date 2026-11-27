@@ -54,6 +54,8 @@ app.MapHealthChecks("/health");
 app.MapCatalogoEndpoints();
 app.MapContasEndpoints();
 app.MapCarrinhoEndpoints();
+app.MapPedidosEndpoints();
+app.MapPagamentosEndpoints();
 
 app.Run();
 

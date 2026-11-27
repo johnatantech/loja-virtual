@@ -1,5 +1,6 @@
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.IdentityModel.Tokens;
 
 namespace Loja.Api.Autenticacao;
@@ -14,7 +15,7 @@ public static class AutenticacaoExtensions
         var chave = opcoes.ChaveDeAssinatura(); // falha na inicialização se a chave não estiver configurada
 
         services.Configure<JwtOpcoes>(config.GetSection(JwtOpcoes.Secao));
-        services.AddSingleton(TimeProvider.System);
+        services.TryAddSingleton(TimeProvider.System);
         services.AddScoped<TokenServico>();
 
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
