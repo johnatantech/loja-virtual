@@ -1,0 +1,39 @@
+<h1>Entrar</h1>
+<p class="subtitulo">Acesse sua conta para finalizar compras e acompanhar pedidos.</p>
+
+@if (expirou()) {
+  <p class="info">Sua sessão expirou. Entre de novo para continuar.</p>
+}
+
+<form [formGroup]="form" (ngSubmit)="enviar()" novalidate>
+  <label>
+    E-mail
+    <input type="email" formControlName="email" autocomplete="email"
+           [attr.aria-invalid]="form.controls.email.touched && form.controls.email.invalid" />
+    @if (form.controls.email.touched && form.controls.email.invalid) {
+      <span class="erro-campo">Informe um e-mail válido.</span>
+    }
+  </label>
+
+  <label>
+    Senha
+    <input type="password" formControlName="senha" autocomplete="current-password"
+           [attr.aria-invalid]="form.controls.senha.touched && form.controls.senha.invalid" />
+    @if (form.controls.senha.touched && form.controls.senha.invalid) {
+      <span class="erro-campo">Informe sua senha.</span>
+    }
+  </label>
+
+  @if (erro(); as mensagem) {
+    <p class="alerta" role="alert">{{ mensagem }}</p>
+  }
+
+  <button type="submit" class="botao-principal" [disabled]="enviando()">
+    {{ enviando() ? 'Entrando...' : 'Entrar' }}
+  </button>
+</form>
+
+<p class="alternativa">
+  Ainda não tem conta?
+  <a routerLink="/cadastro" [queryParams]="{ retorno: retorno() }">Criar conta</a>
+</p>

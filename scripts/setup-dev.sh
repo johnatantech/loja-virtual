@@ -28,7 +28,13 @@ dotnet user-secrets set "ConnectionStrings:Loja" \
   --project src/Loja.Api > /dev/null
 echo "✓ Connection string salva nos user-secrets"
 
-# 4. Dependências
+# 4. Chave de assinatura do JWT: gerada uma única vez, aleatória e fora do Git
+if ! dotnet user-secrets list --project src/Loja.Api | grep -q '^Jwt:Chave'; then
+  dotnet user-secrets set "Jwt:Chave" "$(openssl rand -base64 48)" --project src/Loja.Api > /dev/null
+  echo "✓ Chave do JWT gerada nos user-secrets"
+fi
+
+# 5. Dependências
 dotnet restore
 (cd web && npm ci)
 echo

@@ -1,14 +1,17 @@
+using Loja.Api.Autenticacao;
 using Loja.Api.Endpoints;
 using Loja.Domain.Comum;
 using Loja.Infrastructure;
 using Loja.Infrastructure.Persistencia;
 using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddAutenticacaoJwt(builder.Configuration);
 builder.Services.AddOpenApi();
 builder.Services.AddProblemDetails();
 builder.Services.AddHealthChecks().AddDbContextCheck<LojaDbContext>("banco");
@@ -35,16 +38,22 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
     app.MapScalarApiReference(o => o.WithTitle("Loja Virtual API"));
 
-    // Em desenvolvimento, aplica as migrations e popula o catálogo de demonstração.
+    // Em desenvolvimento, aplica as migrations e popula perfis e catálogo de demonstração.
     using var escopo = app.Services.CreateScope();
     var db = escopo.ServiceProvider.GetRequiredService<LojaDbContext>();
     await db.Database.MigrateAsync();
-    await DadosIniciais.PopularAsync(db);
+    await DadosIniciais.PopularAsync(db, escopo.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>());
 }
 
 app.UseCors();
+app.UseRateLimiter();
+app.UseAuthentication();
+app.UseAuthorization();
+
 app.MapHealthChecks("/health");
 app.MapCatalogoEndpoints();
+app.MapContasEndpoints();
+app.MapCarrinhoEndpoints();
 
 app.Run();
 

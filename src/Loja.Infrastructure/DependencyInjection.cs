@@ -1,6 +1,10 @@
+using Loja.Application.Carrinhos;
 using Loja.Application.Catalogo;
 using Loja.Infrastructure.Consultas;
+using Loja.Infrastructure.Identidade;
 using Loja.Infrastructure.Persistencia;
+using Loja.Infrastructure.Servicos;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -20,7 +24,26 @@ public static class DependencyInjection
 
         services.AddDbContext<LojaDbContext>(o => o.UseSqlServer(conexao,
             sql => sql.EnableRetryOnFailure(maxRetryCount: 3)));
+
+        services.AddIdentityCore<Usuario>(o =>
+            {
+                o.User.RequireUniqueEmail = true;
+                o.Password.RequiredLength = 8;
+                o.Password.RequireDigit = true;
+                o.Password.RequireLowercase = true;
+                o.Password.RequireUppercase = true;
+                o.Password.RequireNonAlphanumeric = false;
+                // Bloqueia a conta por 15 minutos após 5 senhas erradas seguidas.
+                o.Lockout.MaxFailedAccessAttempts = 5;
+                o.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
+                o.Lockout.AllowedForNewUsers = true;
+            })
+            .AddRoles<IdentityRole>()
+            .AddEntityFrameworkStores<LojaDbContext>()
+            .AddErrorDescriber<ErrosIdentityPtBr>();
+
         services.AddScoped<ICatalogoConsultas, CatalogoConsultas>();
+        services.AddScoped<ICarrinhoServico, CarrinhoServico>();
         return services;
     }
 }

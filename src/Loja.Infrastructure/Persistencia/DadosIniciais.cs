@@ -1,13 +1,21 @@
 using Loja.Domain.Catalogo;
+using Loja.Infrastructure.Identidade;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace Loja.Infrastructure.Persistencia;
 
-/// <summary>Catálogo de demonstração, inserido só quando o banco está vazio.</summary>
+/// <summary>Perfis de acesso e catálogo de demonstração, inseridos só quando ainda não existem.</summary>
 public static class DadosIniciais
 {
-    public static async Task PopularAsync(LojaDbContext db, CancellationToken ct = default)
+    public static async Task PopularAsync(LojaDbContext db, RoleManager<IdentityRole> perfis, CancellationToken ct = default)
     {
+        foreach (var perfil in Perfis.Todos)
+        {
+            if (!await perfis.RoleExistsAsync(perfil))
+                await perfis.CreateAsync(new IdentityRole(perfil));
+        }
+
         if (await db.Categorias.AnyAsync(ct))
             return;
 

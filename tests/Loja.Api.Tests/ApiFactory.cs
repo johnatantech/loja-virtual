@@ -18,6 +18,10 @@ public class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
     {
         builder.UseEnvironment("Development"); // aplica migrations e dados iniciais
         builder.UseSetting("ConnectionStrings:Loja", _banco.GetConnectionString());
+        // Chave só de teste, gerada a cada execução; a real fica em user-secrets.
+        builder.UseSetting("Jwt:Chave", Convert.ToBase64String(Guid.NewGuid().ToByteArray()) + Guid.NewGuid());
+        // Os testes fazem muitos logins seguidos; o limite real continua valendo fora deles.
+        builder.UseSetting("Seguranca:TentativasPorMinuto", "1000");
     }
 
     async Task IAsyncLifetime.DisposeAsync()

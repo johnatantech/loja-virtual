@@ -52,9 +52,9 @@
       </div>
       <label class="ordenar">
         Ordenar por
-        <select [value]="filtro().ordenacao ?? 'nome'" (change)="ordenar($any($event.target).value)">
+        <select (change)="ordenar($any($event.target).value)">
           @for (o of ordenacoes; track o.valor) {
-            <option [value]="o.valor">{{ o.rotulo }}</option>
+            <option [value]="o.valor" [selected]="o.valor === (filtro().ordenacao ?? 'nome')">{{ o.rotulo }}</option>
           }
         </select>
       </label>

@@ -1,0 +1,69 @@
+<h1>Carrinho</h1>
+
+@let c = carrinho.carrinho();
+@if (c.itens.length === 0) {
+  <div class="vazio">
+    <p>{{ carrinho.carregando() ? 'Carregando carrinho...' : 'Seu carrinho está vazio.' }}</p>
+    @if (!carrinho.carregando()) {
+      <a routerLink="/" class="botao-principal">Ver produtos</a>
+    }
+  </div>
+} @else {
+  @if (erro(); as mensagem) {
+    <p class="alerta" role="alert">{{ mensagem }}</p>
+  }
+
+  <div class="layout">
+    <ul class="itens">
+      @for (item of c.itens; track item.produtoId) {
+        <li class="item" [class.com-aviso]="item.aviso">
+          <a [routerLink]="['/produto', item.slug]" class="miniatura" tabindex="-1" aria-hidden="true">
+            <app-produto-imagem [nome]="item.nome" [categoriaSlug]="item.categoriaSlug" [imagemUrl]="item.imagemUrl" />
+          </a>
+          <div class="detalhes">
+            <a [routerLink]="['/produto', item.slug]" class="nome">{{ item.nome }}</a>
+            <span class="unitario">{{ item.precoUnitario | currency }} cada</span>
+            @if (item.aviso) {
+              <span class="aviso">{{ item.aviso }}</span>
+            }
+            <div class="acoes">
+              <label>
+                <span class="visualmente-oculto">Quantidade de {{ item.nome }}</span>
+                <select [disabled]="carrinho.carregando()"
+                        (change)="alterar(item, $any($event.target).value)">
+                  @for (n of opcoes(item); track n) {
+                    <option [value]="n" [selected]="n === item.quantidade">{{ n }}</option>
+                  }
+                </select>
+              </label>
+              <button type="button" class="remover" [disabled]="carrinho.carregando()" (click)="remover(item)">
+                Remover
+              </button>
+            </div>
+          </div>
+          <span class="subtotal">{{ item.subtotal | currency }}</span>
+        </li>
+      }
+    </ul>
+
+    <aside class="resumo" aria-label="Resumo do pedido">
+      <h2>Resumo</h2>
+      <p class="linha">
+        <span>{{ c.quantidadeTotal }} {{ c.quantidadeTotal === 1 ? 'item' : 'itens' }}</span>
+        <span>{{ c.total | currency }}</span>
+      </p>
+      <p class="linha frete"><span>Frete</span><span>Calculado no checkout</span></p>
+      <p class="linha total"><span>Total</span><span>{{ c.total | currency }}</span></p>
+
+      @if (auth.logado()) {
+        <button type="button" class="botao-principal" disabled title="O checkout chega na fase 4">
+          Finalizar compra
+        </button>
+        <p class="nota">O checkout com pagamento chega na fase 4 do projeto.</p>
+      } @else {
+        <a routerLink="/entrar" [queryParams]="{ retorno: '/carrinho' }" class="botao-principal">Entrar para finalizar</a>
+        <p class="nota">Os itens do carrinho continuam com você depois de entrar.</p>
+      }
+    </aside>
+  </div>
+}

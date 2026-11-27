@@ -38,10 +38,34 @@
             <p class="estoque">Em estoque</p>
           }
 
-          <button type="button" class="botao-principal" disabled title="O carrinho chega na fase 3">
-            Adicionar ao carrinho
-          </button>
-          <p class="aviso-fase">O carrinho e o checkout chegam nas próximas fases do projeto.</p>
+          @if (p.estoque > 0) {
+            @if (disponivel(p) > 0) {
+              <div class="comprar">
+                <label>
+                  <span class="visualmente-oculto">Quantidade</span>
+                  <select (change)="quantidade.set(+$any($event.target).value)">
+                    @for (n of opcoes(p); track n) {
+                      <option [value]="n" [selected]="n === quantidade()">{{ n }}</option>
+                    }
+                  </select>
+                </label>
+                <button type="button" class="botao-principal" [disabled]="carrinho.carregando()" (click)="adicionar(p)">
+                  Adicionar ao carrinho
+                </button>
+              </div>
+            } @else {
+              <p class="nota">Você já tem a quantidade máxima deste produto no carrinho.</p>
+            }
+          }
+
+          @if (retorno(); as r) {
+            <p class="retorno" [class.erro]="r.tipo === 'erro'" role="status">
+              {{ r.texto }}
+              @if (r.tipo === 'ok') {
+                <a routerLink="/carrinho">Ver carrinho</a>
+              }
+            </p>
+          }
 
           <h2>Descrição</h2>
           <p class="descricao">{{ p.descricao }}</p>
