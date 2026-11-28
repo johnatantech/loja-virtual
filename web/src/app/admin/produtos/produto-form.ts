@@ -48,8 +48,8 @@ import { AdminService } from '../admin.service';
       </label>
 
       <label>
-        Endereço da imagem <span class="opcional">(opcional, https://)</span>
-        <input type="url" formControlName="imagemUrl" placeholder="https://..." />
+        Imagem <span class="opcional">(opcional: endereço https:// ou foto da loja, como /produtos/nome.webp)</span>
+        <input formControlName="imagemUrl" placeholder="https://... ou /produtos/nome.webp" />
       </label>
 
       @if (!ehNovo()) {

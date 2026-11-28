@@ -31,6 +31,19 @@ public class Produto
     public void Atualizar(string nome, string descricao, int categoriaId, string? imagemUrl) =>
         DefinirDados(nome, descricao, categoriaId, imagemUrl);
 
+    // Fotos que acompanham a própria loja: só letras minúsculas, números e hífen, sem subpastas.
+    private static readonly System.Text.RegularExpressions.Regex FotoDaLoja =
+        new(@"^/produtos/[a-z0-9-]+\.(webp|jpg|jpeg|png)$", System.Text.RegularExpressions.RegexOptions.CultureInvariant);
+
+    /// <summary>
+    /// Aceita endereço https:// (evita "javascript:" e imagens sem criptografia) ou uma foto
+    /// servida pela própria loja em /produtos/. Qualquer outro caminho é recusado.
+    /// </summary>
+    private static bool ImagemValida(string imagem) =>
+        imagem.Length <= 500 &&
+        (FotoDaLoja.IsMatch(imagem) ||
+         (Uri.TryCreate(imagem, UriKind.Absolute, out var uri) && uri.Scheme == Uri.UriSchemeHttps));
+
     private void DefinirDados(string nome, string descricao, int categoriaId, string? imagemUrl)
     {
         if (string.IsNullOrWhiteSpace(nome) || nome.Trim().Length > 150)
@@ -41,9 +54,8 @@ public class Produto
             throw new DomainException("Escolha uma categoria.");
 
         var imagem = string.IsNullOrWhiteSpace(imagemUrl) ? null : imagemUrl.Trim();
-        // Só aceita https: evita links "javascript:" e imagens servidas sem criptografia.
-        if (imagem is not null && (!Uri.TryCreate(imagem, UriKind.Absolute, out var uri) || uri.Scheme != Uri.UriSchemeHttps || imagem.Length > 500))
-            throw new DomainException("A imagem precisa ser um endereço https:// válido.");
+        if (imagem is not null && !ImagemValida(imagem))
+            throw new DomainException("A imagem precisa ser um endereço https:// ou uma foto da loja (/produtos/arquivo.webp).");
 
         Nome = nome.Trim();
         Slug = Comum.Slug.Gerar(Nome);

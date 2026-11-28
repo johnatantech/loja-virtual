@@ -29,6 +29,17 @@ public class CatalogoApiTests(ApiFactory factory)
 }
 
 [Collection("Api")]
+public class FotosDosProdutosTests(ApiFactory factory)
+{
+    [Fact]
+    public async Task Produtos_de_demonstracao_vem_com_foto_da_loja()
+    {
+        var produto = await factory.CreateClient().GetFromJsonAsync<ProdutoDetalheDto>("/api/produtos/cafeteira-italiana");
+        Assert.Equal("/produtos/cafeteira-italiana.webp", produto!.ImagemUrl);
+    }
+}
+
+[Collection("Api")]
 public class SaudeApiTests(ApiFactory factory)
 {
     [Fact]

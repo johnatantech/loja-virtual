@@ -1,4 +1,4 @@
-import { Component, computed, input } from '@angular/core';
+import { Component, computed, effect, input, signal } from '@angular/core';
 
 const CORES: Record<string, string> = {
   eletronicos: '#2b4c7e',
@@ -8,14 +8,16 @@ const CORES: Record<string, string> = {
 };
 
 /**
- * Mostra a foto do produto ou, enquanto não houver fotos cadastradas,
- * uma capa gerada com as iniciais e a cor da categoria.
+ * Mostra a foto do produto. Sem foto cadastrada, ou se ela não carregar,
+ * exibe uma capa gerada com as iniciais e a cor da categoria: a vitrine nunca
+ * mostra imagem quebrada.
  */
 @Component({
   selector: 'app-produto-imagem',
   template: `
-    @if (imagemUrl(); as url) {
-      <img [src]="url" [alt]="nome()" loading="lazy" />
+    @if (imagemUrl() && !falhou()) {
+      <!-- width/height reservam o espaço da foto e evitam que a página "pule" ao carregar -->
+      <img [src]="imagemUrl()" [alt]="nome()" width="800" height="600" loading="lazy" decoding="async" (error)="falhou.set(true)" />
     } @else {
       <div class="capa" [style.--cor]="cor()" role="img" [attr.aria-label]="nome()">
         <span aria-hidden="true">{{ iniciais() }}</span>
@@ -28,6 +30,16 @@ export class ProdutoImagem {
   readonly nome = input.required<string>();
   readonly categoriaSlug = input.required<string>();
   readonly imagemUrl = input<string | null>(null);
+
+  /** Marca que a foto atual falhou; volta a tentar se o endereço mudar. */
+  protected readonly falhou = signal(false);
+
+  constructor() {
+    effect(() => {
+      this.imagemUrl();
+      this.falhou.set(false);
+    });
+  }
 
   protected readonly cor = computed(() => CORES[this.categoriaSlug()] ?? '#4a5560');
   protected readonly iniciais = computed(() =>

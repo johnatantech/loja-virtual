@@ -35,3 +35,29 @@ public class ProdutoEdicaoTests
         Assert.Null(produto.ImagemUrl);
     }
 }
+
+public class ProdutoFotoDaLojaTests
+{
+    private static Produto Novo() => new("Café Especial", "Torra média", 39.90m, 10, categoriaId: 1);
+
+    [Theory]
+    [InlineData("/produtos/cafeteira-italiana.webp")]
+    [InlineData("/produtos/tapete-de-yoga.jpg")]
+    public void Aceita_foto_servida_pela_propria_loja(string caminho)
+    {
+        var produto = Novo();
+        produto.Atualizar("Café", "", 1, caminho);
+        Assert.Equal(caminho, produto.ImagemUrl);
+    }
+
+    [Theory]
+    [InlineData("/produtos/../segredos.webp")]   // tentativa de sair da pasta
+    [InlineData("/outra-pasta/foto.webp")]
+    [InlineData("/produtos/Foto.WEBP")]
+    [InlineData("/produtos/foto.svg")]           // SVG pode carregar script
+    [InlineData("//site-externo.com/foto.webp")] // endereço sem esquema
+    public void Recusa_outros_caminhos(string caminho)
+    {
+        Assert.Throws<DomainException>(() => Novo().Atualizar("Café", "", 1, caminho));
+    }
+}

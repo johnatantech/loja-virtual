@@ -7,8 +7,14 @@ import { Carregavel, Categoria, FiltroProdutos, Pagina, ProdutoDetalhe, ProdutoR
 export class CatalogoService {
   private readonly http = inject(HttpClient);
 
-  /** As categorias mudam pouco: uma requisição serve a sessão inteira. */
-  readonly categorias$ = this.http.get<Categoria[]>('/api/categorias').pipe(shareReplay(1));
+  /**
+   * As categorias mudam pouco: uma requisição serve a sessão inteira.
+   * Se falharem, a vitrine continua funcionando, só sem o menu lateral.
+   */
+  readonly categorias$ = this.http.get<Categoria[]>('/api/categorias').pipe(
+    catchError(() => of<Categoria[]>([])),
+    shareReplay(1),
+  );
 
   listarProdutos(filtro: FiltroProdutos): Observable<Pagina<ProdutoResumo>> {
     let params = new HttpParams();

@@ -167,6 +167,12 @@ administrador envia e entrega o pedido. Todas as credenciais do CI são geradas 
 - **Frete pela faixa do CEP, não pela UF digitada**: o cliente não consegue pagar menos frete
   informando outro estado.
 - **Pedido guarda preços e endereço do momento da compra**, imunes a mudanças posteriores.
+- **Fotos dos produtos servidas pela própria loja**: 12 imagens em WebP (371 KB no total), sem
+  depender de serviço externo. O domínio aceita só endereços `https://` ou fotos em `/produtos/`
+  com nome restrito (bloqueia `../`, outras pastas e SVG). Se uma foto falhar, a capa com as
+  iniciais volta sozinha. Créditos em [docs/CREDITOS-IMAGENS.md](docs/CREDITOS-IMAGENS.md).
+- **Migration só de dados para bancos já populados**: preenche a foto apenas dos produtos sem
+  imagem, preservando qualquer foto trocada pelo painel.
 - **Total conferido no servidor antes de fechar o pedido**: o checkout envia o total que o
   cliente está vendo; se o carrinho mudou (por exemplo, em outra aba), a API recusa o pedido e
   mostra o valor atualizado, em vez de cobrar algo diferente do que a pessoa confirmou.
@@ -229,7 +235,7 @@ aleatória, que fica no arquivo `.env` (fora do Git).
 
 - GitHub: [@johnatantech](https://github.com/johnatantech)
 - Portfólio: [johnatantech.github.io](https://johnatantech.github.io)
-- LinkedIn: [seu-perfil](https://www.linkedin.com/in/johnatan-flores-67595a221/)
+- LinkedIn: [seu-perfil](https://www.linkedin.com/in/SEU-PERFIL)
 
 Projeto desenvolvido para portfólio. Sugestões e feedbacks são bem-vindos via
 [issues](https://github.com/johnatantech/loja-virtual/issues).
