@@ -1,0 +1,55 @@
+# Blueprint do Render: descreve a API e a loja como código.
+# Os deploys são disparados pelo GitHub Actions só depois que o CI passa (autoDeploy: false).
+services:
+  - type: web
+    name: loja-virtual-api
+    runtime: docker
+    plan: free
+    region: virginia # perto do banco no Neon (AWS us-east-1)
+    dockerfilePath: ./src/Loja.Api/Dockerfile
+    dockerContext: .
+    autoDeploy: false
+    healthCheckPath: /health/vivo # não consulta o banco, então não o acorda à toa
+    envVars:
+      - key: ConnectionStrings__Loja
+        sync: false # string de conexão do Neon, informada na criação (nunca no repositório)
+      - key: Jwt__Chave
+        generateValue: true # o Render gera uma chave aleatória
+      - key: Admin__Email
+        sync: false
+      - key: Admin__Senha
+        sync: false
+      - key: Cors__Origens__0
+        sync: false # endereço da loja, ex.: https://loja-virtual.onrender.com
+      - key: Banco__AplicarMigracoesNaInicializacao
+        value: "true"
+      - key: Proxy__ConfiarEmCabecalhosEncaminhados
+        value: "true"
+
+  - type: web
+    name: loja-virtual
+    runtime: static
+    autoDeploy: false
+    buildCommand: cd web && npm ci && npx ng build --define "API_URL='$API_URL'"
+    staticPublishPath: web/dist/web/browser
+    envVars:
+      - key: API_URL
+        sync: false # endereço da API, ex.: https://loja-virtual-api.onrender.com
+    routes:
+      # Rotas do Angular (ex.: /produto/codigo-limpo) funcionam ao recarregar a página.
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    headers:
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
+      - path: /*
+        name: Permissions-Policy
+        value: camera=(), microphone=(), geolocation=()

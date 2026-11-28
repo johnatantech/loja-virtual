@@ -78,7 +78,7 @@ public class AdminServico(
         pagina = Math.Max(1, pagina);
         var consulta = db.Produtos.AsNoTracking(); // inclui inativos, ao contrário da vitrine
         if (!string.IsNullOrWhiteSpace(busca))
-            consulta = consulta.Where(p => p.Nome.Contains(busca.Trim()));
+            consulta = consulta.Where(p => EF.Functions.ILike(p.Nome, Consultas.Busca.Contem(busca)));
 
         var total = await consulta.CountAsync(ct);
         var itens = await consulta.OrderBy(p => p.Nome).ThenBy(p => p.Id)
@@ -227,8 +227,8 @@ public class AdminServico(
         var consulta = db.Users.AsNoTracking();
         if (!string.IsNullOrWhiteSpace(busca))
         {
-            var termo = busca.Trim();
-            consulta = consulta.Where(u => u.Nome.Contains(termo) || u.Email!.Contains(termo));
+            var padrao = Consultas.Busca.Contem(busca);
+            consulta = consulta.Where(u => EF.Functions.ILike(u.Nome, padrao) || EF.Functions.ILike(u.Email!, padrao));
         }
 
         var total = await consulta.CountAsync(ct);

@@ -1,21 +1,20 @@
 services:
   db:
-    image: mcr.microsoft.com/mssql/server:2022-latest
+    image: postgres:17-alpine
     container_name: loja-db
     environment:
-      ACCEPT_EULA: "Y"
-      MSSQL_PID: Developer # edição gratuita, só para desenvolvimento
-      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD:?Defina MSSQL_SA_PASSWORD no arquivo .env (rode scripts/setup-dev.sh)}
+      POSTGRES_DB: loja
+      POSTGRES_USER: loja
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Defina POSTGRES_PASSWORD no arquivo .env (rode scripts/setup-dev.sh)}
     ports:
-      - "1433:1433"
+      - "5432:5432"
     volumes:
-      - sqldata:/var/opt/mssql
+      - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "$$MSSQL_SA_PASSWORD" -C -Q "SELECT 1" -b -o /dev/null
-      interval: 10s
+      test: ["CMD-SHELL", "pg_isready -U loja -d loja"]
+      interval: 5s
       timeout: 5s
       retries: 12
-      start_period: 20s
 
 volumes:
-  sqldata:
+  pgdata:

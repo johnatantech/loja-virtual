@@ -14,15 +14,15 @@ bem testadas, segurança e arquitetura organizada**.
 |--------|------------|
 | Front-end | Angular 22 (standalone components, signals) |
 | API | ASP.NET Core (.NET 10 LTS), Minimal APIs, OpenAPI + Scalar, Identity + JWT |
-| Dados | SQL Server 2022, Entity Framework Core 10 |
-| Testes | xUnit, Testcontainers (SQL Server real), Vitest + Angular Testing, Playwright (ponta a ponta) |
+| Dados | PostgreSQL 17, Entity Framework Core 10 (Npgsql) |
+| Testes | xUnit, Testcontainers (PostgreSQL real), Vitest + Angular Testing, Playwright (ponta a ponta) |
 | CI | GitHub Actions: build, testes de integração e ponta a ponta a cada push |
 | Ambiente | GitHub Codespaces / Dev Containers, Docker Compose |
 
 ## Arquitetura
 ```
 web/ (Angular)  →  Loja.Api  →  Loja.Application  →  Loja.Domain
-                        ↘  Loja.Infrastructure (EF Core, SQL Server) ↗
+                        ↘  Loja.Infrastructure (EF Core, PostgreSQL) ↗
 ```
 - **Domain**: entidades e regras de negócio, sem dependência de banco ou framework.
 - **Application**: casos de uso e contratos (interfaces) que a Infrastructure implementa.
@@ -45,7 +45,7 @@ web/ (Angular)  →  Loja.Api  →  Loja.Application  →  Loja.Domain
 ### No GitHub Codespaces (recomendado)
 1. No repositório, clique em **Code → Codespaces → Create codespace on main**.
 2. Aguarde a configuração automática (`scripts/setup-dev.sh`): ela gera a senha do banco,
-   sobe o SQL Server, grava a connection string nos user-secrets e instala as dependências.
+   sobe o PostgreSQL, grava a connection string nos user-secrets e instala as dependências.
 3. Em dois terminais:
    ```bash
    dotnet run --project src/Loja.Api   # API: http://localhost:5120 (docs em /scalar)
@@ -77,7 +77,7 @@ Por padrão a loja usa o **pagamento simulado**. Para usar o sandbox do Mercado 
 
 ### Testes
 ```bash
-dotnet test                 # domínio + integração (sobe um SQL Server via Testcontainers)
+dotnet test                 # domínio + integração (sobe um PostgreSQL via Testcontainers)
 cd web && npm test          # front-end
 ```
 
@@ -89,34 +89,40 @@ set -a; source ../.env; set +a      # credenciais do administrador
 E2E_ADMIN_EMAIL=$ADMIN_EMAIL E2E_ADMIN_SENHA=$ADMIN_SENHA npm run e2e
 ```
 
-No GitHub Actions, os três níveis rodam a cada push: o workflow sobe um SQL Server, a API e o
+No GitHub Actions, os três níveis rodam a cada push: o workflow sobe um PostgreSQL, a API e o
 Angular, e o Playwright faz uma compra completa (cadastro, carrinho, checkout, pagamento) e o
 administrador envia e entrega o pedido. Todas as credenciais do CI são geradas na hora e descartadas.
 
-## Publicação (Azure, planos gratuitos)
+## Publicação (planos gratuitos, sem cartão)
 | Parte | Serviço | Plano |
 |-------|---------|-------|
-| Loja (Angular) | Azure Static Web Apps | Free |
-| API (.NET) | Azure App Service (Linux) | F1 Free |
-| Banco | Azure SQL Database | Oferta gratuita (pausa ao atingir o limite mensal, sem cobrança) |
+| Loja (Angular) | Render (site estático) | Free |
+| API (.NET, Docker) | Render (web service) | Free |
+| Banco | Neon (PostgreSQL serverless) | Free |
 
-- **Deploy automático** (`.github/workflows/deploy.yml`): roda depois que o CI passa na `main`; o
-  login no Azure usa **OIDC**, sem nenhuma senha do Azure guardada no GitHub.
-- **Segredos só nas configurações do App Service** (conexão do banco, chave do JWT, senha do admin).
+- **Infraestrutura como código**: o `render.yaml` (Blueprint) descreve os dois serviços, com
+  variáveis, cabeçalhos de segurança e rotas do Angular.
+- **Deploy só depois do CI** (`.github/workflows/deploy.yml`): os deploy hooks do Render são
+  chamados apenas quando todos os testes passam na `main`.
+- **Imagem Docker enxuta e sem root**: build em duas etapas (SDK compila, só o runtime vai para a
+  imagem) e execução com o usuário sem privilégios das imagens oficiais do .NET.
+- **Segredos só nas variáveis do Render** (conexão do banco e senha do admin); a chave do JWT é
+  gerada pelo próprio Render.
 - **IP real do visitante atrás do proxy** (`Proxy:ConfiarEmCabecalhosEncaminhados`), para o limite
   de tentativas de login valer por pessoa, e HTTPS obrigatório com HSTS.
-- Como os planos gratuitos dormem quando ninguém usa, **o primeiro acesso pode levar até 1 minuto**.
+- Os planos gratuitos dormem quando ninguém usa: **o primeiro acesso pode levar até 1 minuto**
+  (a API acorda em cerca de um minuto; o banco, em frações de segundo).
 
 ## Decisões técnicas
 - **Regras de negócio no domínio**: produto não vende além do estoque, pedido segue uma máquina
   de estados (aguardando pagamento → pago → enviado → entregue) e itens guardam o preço do
   momento da compra.
-- **Concorrência otimista no estoque** (`rowversion`): duas compras simultâneas da última
+- **Concorrência otimista no estoque** (coluna de sistema `xmin` do PostgreSQL): duas compras simultâneas da última
   unidade não resultam em estoque negativo; a segunda falha ao salvar.
 - **Regras repetidas no banco** (check constraints de preço e estoque) como última linha de defesa.
 - **Nenhum segredo no código**: senha do banco gerada aleatoriamente no `.env` (fora do Git) e
-  connection string em user-secrets; em produção, variáveis de ambiente ou Azure Key Vault.
-- **Testes de integração contra SQL Server real** (Testcontainers), não um banco em memória que
+  connection string em user-secrets; em produção, variáveis de ambiente da hospedagem.
+- **Testes de integração contra PostgreSQL real** (Testcontainers), não um banco em memória que
   se comporta diferente do de produção.
 - **Erros de negócio viram HTTP 400** com ProblemDetails, em vez de erro 500 genérico.
 - **Filtros na URL**: busca, categoria, preço, ordenação e página ficam na query string, então
@@ -151,7 +157,7 @@ administrador envia e entrega o pedido. Todas as credenciais do CI são geradas 
   notificação); o valor pago precisa bater com o total; e a mesma notificação repetida não
   confirma o pedido duas vezes (índice único no id do pagamento).
 - **Estoque sem venda dupla**: pedido, baixa de estoque e carrinho vazio são gravados na mesma
-  transação; se duas compras disputam a última unidade, o `rowversion` detecta o conflito e a
+  transação; se duas compras disputam a última unidade, o `xmin` detecta o conflito e a
   operação é refeita com o estoque atualizado. Um teste dispara compras simultâneas para provar.
 - **Frete pela faixa do CEP, não pela UF digitada**: o cliente não consegue pagar menos frete
   informando outro estado.
@@ -171,7 +177,7 @@ administrador envia e entrega o pedido. Todas as credenciais do CI são geradas 
   enviar um pedido não pago ou cancelar um já entregue.
 - **Erros de negócio registrados como aviso**: estoque insuficiente ou ação inválida viram 400
   (e conflitos de concorrência, 409) sem stack trace no log; só falhas reais aparecem como erro.
-- **Um SQL Server para toda a suíte de integração** (coleção do xUnit), em vez de um contêiner
+- **Um PostgreSQL para toda a suíte de integração** (coleção do xUnit), em vez de um contêiner
   por classe de teste.
 
 ## Endpoints atuais

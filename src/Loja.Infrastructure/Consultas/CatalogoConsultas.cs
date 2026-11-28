@@ -21,9 +21,8 @@ public class CatalogoConsultas(LojaDbContext db) : ICatalogoConsultas
 
         if (!string.IsNullOrWhiteSpace(filtro.Busca))
         {
-            // A collation padrão do SQL Server ignora maiúsculas e minúsculas.
-            var termo = filtro.Busca.Trim();
-            consulta = consulta.Where(p => p.Nome.Contains(termo) || p.Descricao.Contains(termo));
+            var padrao = Busca.Contem(filtro.Busca);
+            consulta = consulta.Where(p => EF.Functions.ILike(p.Nome, padrao) || EF.Functions.ILike(p.Descricao, padrao));
         }
         if (!string.IsNullOrWhiteSpace(filtro.Categoria))
             consulta = consulta.Where(p => p.Categoria.Slug == filtro.Categoria);

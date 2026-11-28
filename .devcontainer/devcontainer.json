@@ -1,6 +1,6 @@
 {
-  "name": "Loja Virtual (.NET 10 + Angular + SQL Server)",
- "image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
+  "name": "Loja Virtual (.NET 10 + Angular + PostgreSQL)",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
   "features": {
     "ghcr.io/devcontainers/features/dotnet:2": { "version": "10.0" },
     "ghcr.io/devcontainers/features/node:1": { "version": "lts" },
@@ -12,7 +12,7 @@
   "portsAttributes": {
     "4200": { "label": "Loja (Angular)", "onAutoForward": "openBrowser" },
     "5120": { "label": "API (.NET)" },
-    "1433": { "label": "SQL Server", "onAutoForward": "ignore" }
+    "5432": { "label": "PostgreSQL", "onAutoForward": "ignore" }
   },
   "postCreateCommand": "bash scripts/setup-dev.sh",
   "postStartCommand": "docker compose up -d db",

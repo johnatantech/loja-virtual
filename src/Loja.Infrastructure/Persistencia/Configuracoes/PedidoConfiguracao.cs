@@ -8,7 +8,7 @@ public class PedidoConfiguracao : IEntityTypeConfiguration<Pedido>
 {
     public void Configure(EntityTypeBuilder<Pedido> builder)
     {
-        builder.ToTable("Pedidos", t => t.HasCheckConstraint("CK_Pedidos_ValorFrete", "[ValorFrete] >= 0"));
+        builder.ToTable("Pedidos", t => t.HasCheckConstraint("CK_Pedidos_ValorFrete", "\"ValorFrete\" >= 0"));
         builder.Property(p => p.ClienteId).HasMaxLength(450).IsRequired();
         builder.Property(p => p.Status).HasConversion<string>().HasMaxLength(30);
         builder.Property(p => p.ValorFrete).HasPrecision(10, 2);
@@ -16,7 +16,7 @@ public class PedidoConfiguracao : IEntityTypeConfiguration<Pedido>
         builder.Property(p => p.PagamentoExternoId).HasMaxLength(100);
         builder.HasIndex(p => p.ClienteId);
         // Um pagamento do gateway nunca confirma dois pedidos.
-        builder.HasIndex(p => p.PagamentoExternoId).IsUnique().HasFilter("[PagamentoExternoId] IS NOT NULL");
+        builder.HasIndex(p => p.PagamentoExternoId).IsUnique().HasFilter("\"PagamentoExternoId\" IS NOT NULL");
         builder.Ignore(p => p.Subtotal);
         builder.Ignore(p => p.Total);
 

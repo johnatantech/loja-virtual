@@ -24,7 +24,7 @@ jobs:
           dotnet-version: "10.0.x"
       - name: Restaurar e compilar
         run: dotnet build --configuration Release
-      # Os testes de integração sobem um SQL Server real via Testcontainers (o runner tem Docker).
+      # Os testes de integração sobem um PostgreSQL real via Testcontainers (o runner tem Docker).
       - name: Testes de domínio e integração
         run: dotnet test --configuration Release --no-build --logger "console;verbosity=normal"
 
@@ -65,26 +65,26 @@ jobs:
       # Credenciais descartáveis, geradas a cada execução: nada fica gravado no repositório.
       - name: Gerar segredos temporários
         run: |
-          echo "SA_SENHA=$(openssl rand -base64 24 | tr -dc 'A-Za-z0-9' | head -c 20)Aa1!" >> "$GITHUB_ENV"
+          echo "PG_SENHA=$(openssl rand -base64 24 | tr -dc 'A-Za-z0-9' | head -c 24)" >> "$GITHUB_ENV"
           echo "JWT_CHAVE=$(openssl rand -base64 48)" >> "$GITHUB_ENV"
           echo "ADMIN_SENHA=Adm$(openssl rand -base64 24 | tr -dc 'A-Za-z0-9' | head -c 16)1" >> "$GITHUB_ENV"
 
-      - name: Subir SQL Server
+      - name: Subir PostgreSQL
         run: |
-          docker run -d --name loja-db -p 1433:1433 \
-            -e ACCEPT_EULA=Y -e MSSQL_PID=Developer -e MSSQL_SA_PASSWORD="$SA_SENHA" \
-            mcr.microsoft.com/mssql/server:2022-latest
+          docker run -d --name loja-db -p 5432:5432 \
+            -e POSTGRES_DB=loja -e POSTGRES_USER=loja -e POSTGRES_PASSWORD="$PG_SENHA" \
+            postgres:17-alpine
           for i in $(seq 1 30); do
-            docker exec loja-db /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "$SA_SENHA" -C -Q "SELECT 1" -b -o /dev/null && exit 0
-            sleep 3
+            docker exec loja-db pg_isready -U loja -d loja && exit 0
+            sleep 2
           done
-          echo "SQL Server não ficou pronto a tempo" && docker logs loja-db && exit 1
+          echo "PostgreSQL não ficou pronto a tempo" && docker logs loja-db && exit 1
 
       - name: Subir API
         env:
           ASPNETCORE_ENVIRONMENT: Development # aplica migrations e dados iniciais
           ASPNETCORE_URLS: http://localhost:5120
-          ConnectionStrings__Loja: "Server=localhost,1433;Database=Loja;User Id=sa;Password=${{ env.SA_SENHA }};TrustServerCertificate=True;Encrypt=True"
+          ConnectionStrings__Loja: "Host=localhost;Port=5432;Database=loja;Username=loja;Password=${{ env.PG_SENHA }}"
           Jwt__Chave: ${{ env.JWT_CHAVE }}
           Admin__Email: admin@ci.local
           Admin__Senha: ${{ env.ADMIN_SENHA }}

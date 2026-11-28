@@ -15,7 +15,7 @@ public class CarrinhoConfiguracao : IEntityTypeConfiguration<Carrinho>
         builder.OwnsMany(c => c.Itens, item =>
         {
             item.ToTable("ItensCarrinho", t =>
-                t.HasCheckConstraint("CK_ItensCarrinho_Quantidade", "[Quantidade] > 0"));
+                t.HasCheckConstraint("CK_ItensCarrinho_Quantidade", "\"Quantidade\" > 0"));
             item.WithOwner().HasForeignKey("CarrinhoId");
             item.HasKey(i => i.Id);
             item.HasIndex("CarrinhoId", nameof(ItemCarrinho.ProdutoId)).IsUnique();

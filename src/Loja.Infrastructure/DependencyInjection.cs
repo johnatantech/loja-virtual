@@ -27,8 +27,10 @@ public static class DependencyInjection
                 "Connection string 'Loja' não configurada. Rode scripts/setup-dev.sh ou defina " +
                 "a variável de ambiente ConnectionStrings__Loja.");
 
-        services.AddDbContext<LojaDbContext>(o => o.UseSqlServer(conexao,
-            sql => sql.EnableRetryOnFailure(maxRetryCount: 3)));
+        // EnableRetryOnFailure: o Neon pausa o banco quando ocioso; a primeira conexão pode falhar
+        // enquanto ele acorda, e a nova tentativa resolve sem o cliente perceber.
+        services.AddDbContext<LojaDbContext>(o => o.UseNpgsql(conexao,
+            pg => pg.EnableRetryOnFailure(maxRetryCount: 3)));
 
         services.AddIdentityCore<Usuario>(o =>
             {

@@ -1,0 +1,10 @@
+**/bin/
+**/obj/
+**/node_modules/
+web/
+tests/
+.git/
+.github/
+.devcontainer/
+.env
+*.md

@@ -15,12 +15,6 @@ public class Produto
     public int CategoriaId { get; private set; }
     public Categoria Categoria { get; private set; } = null!;
 
-    /// <summary>
-    /// Controle de concorrência otimista: se duas compras alterarem o mesmo produto ao mesmo
-    /// tempo, a segunda falha ao salvar em vez de vender um estoque que já não existe.
-    /// </summary>
-    public byte[] RowVersion { get; private set; } = [];
-
     private Produto() { } // EF Core
 
     public Produto(string nome, string descricao, decimal preco, int estoque, int categoriaId, string? imagemUrl = null)

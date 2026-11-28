@@ -11,6 +11,6 @@ public class LojaDbContextFactory : IDesignTimeDbContextFactory<LojaDbContext>
 {
     public LojaDbContext CreateDbContext(string[] args) =>
         new(new DbContextOptionsBuilder<LojaDbContext>()
-            .UseSqlServer("Server=design-time;Database=Loja;Integrated Security=false")
+            .UseNpgsql("Host=design-time;Database=loja")
             .Options);
 }

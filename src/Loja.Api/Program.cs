@@ -23,13 +23,15 @@ var origensFront = builder.Configuration.GetSection("Cors:Origens").Get<string[]
 builder.Services.AddCors(o => o.AddDefaultPolicy(p =>
     p.WithOrigins(origensFront).AllowAnyHeader().AllowAnyMethod()));
 
-// Atrás do proxy do Azure, o IP do visitante chega no cabeçalho X-Forwarded-For.
+// Atrás do proxy da hospedagem, o IP do visitante chega no cabeçalho X-Forwarded-For.
 // Sem isso, o limite de tentativas de login valeria para todos os visitantes somados.
 builder.Services.Configure<ForwardedHeadersOptions>(o =>
 {
     o.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
-    o.ForwardLimit = 1;      // usa só o IP acrescentado pelo proxy, não o que o cliente enviou
-    o.KnownIPNetworks.Clear(); // os IPs do proxy do App Service não são fixos
+    // Quantos proxies confiáveis existem na frente da API: usa só os IPs acrescentados por eles,
+    // não o que o cliente enviou no cabeçalho.
+    o.ForwardLimit = builder.Configuration.GetValue("Proxy:LimiteEncaminhamentos", 1);
+    o.KnownIPNetworks.Clear(); // os IPs dos proxies da hospedagem não são fixos
     o.KnownProxies.Clear();
 });
 
@@ -51,8 +53,10 @@ if (app.Environment.IsDevelopment())
 }
 else
 {
-    app.UseHsts(); // navegadores passam a usar só HTTPS com a API
-    app.UseHttpsRedirection();
+    // A hospedagem termina o TLS e já redireciona HTTP para HTTPS na borda. Redirecionar aqui
+    // também poderia derrubar a verificação de saúde interna, que chega por HTTP.
+    // O HSTS faz os navegadores usarem só HTTPS com a API dali em diante.
+    app.UseHsts();
 }
 
 // Em desenvolvimento (e na demo publicada, por configuração), aplica as migrations e

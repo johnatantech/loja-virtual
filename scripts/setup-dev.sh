@@ -1,30 +1,30 @@
 #!/usr/bin/env bash
-# Prepara o ambiente de desenvolvimento: senha do banco, SQL Server, segredos e dependências.
+# Prepara o ambiente de desenvolvimento: senha do banco, PostgreSQL, segredos e dependências.
 # Pode ser executado mais de uma vez sem problema.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-# 1. Senha aleatória do SQL Server, guardada só no .env (fora do Git)
-if [[ ! -f .env ]] || ! grep -q '^MSSQL_SA_PASSWORD=.\+' .env; then
-  senha="$(openssl rand -base64 24 | tr -dc 'A-Za-z0-9' | head -c 20)Aa1!"
-  echo "MSSQL_SA_PASSWORD=${senha}" > .env
+# 1. Senha aleatória do PostgreSQL, guardada só no .env (fora do Git)
+touch .env
+if ! grep -q '^POSTGRES_PASSWORD=.\+' .env; then
+  echo "POSTGRES_PASSWORD=$(openssl rand -base64 24 | tr -dc 'A-Za-z0-9' | head -c 24)" >> .env
   echo "✓ Senha do banco gerada em .env"
 fi
 set -a; source .env; set +a
 
-# 2. SQL Server em container
-echo "→ Subindo o SQL Server..."
+# 2. PostgreSQL em container
+echo "→ Subindo o PostgreSQL..."
 docker compose up -d db
 for _ in $(seq 1 30); do
   [[ "$(docker inspect -f '{{.State.Health.Status}}' loja-db 2>/dev/null)" == "healthy" ]] && break
-  sleep 3
+  sleep 2
 done
-echo "✓ SQL Server pronto"
+echo "✓ PostgreSQL pronto"
 
 # 3. Connection string nos user-secrets da API (nunca no appsettings)
 dotnet tool restore
 dotnet user-secrets set "ConnectionStrings:Loja" \
-  "Server=localhost,1433;Database=Loja;User Id=sa;Password=${MSSQL_SA_PASSWORD};TrustServerCertificate=True;Encrypt=True" \
+  "Host=localhost;Port=5432;Database=loja;Username=loja;Password=${POSTGRES_PASSWORD}" \
   --project src/Loja.Api > /dev/null
 echo "✓ Connection string salva nos user-secrets"
 
