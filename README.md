@@ -218,3 +218,5 @@ administrador envia e entrega o pedido. Todas as credenciais do CI são geradas 
 
 O acesso de administrador é criado pelo `setup-dev.sh`: e-mail `admin@loja.local` e senha
 aleatória, que fica no arquivo `.env` (fora do Git).
+
+- LinkedIn: [seu-perfil](https://www.linkedin.com/in/SEU-PERFIL)
