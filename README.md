@@ -2,6 +2,9 @@
 
 [![CI](https://github.com/johnatantech/loja-virtual/actions/workflows/ci.yml/badge.svg)](https://github.com/johnatantech/loja-virtual/actions/workflows/ci.yml)
 
+🔗 **Demo:** [loja-virtual-5nz4.onrender.com](https://loja-virtual-5nz4.onrender.com)
+(planos gratuitos: o primeiro acesso depois de um tempo parado pode levar até 1 minuto)
+
 E-commerce completo de demonstração: catálogo, carrinho, checkout com pagamento em sandbox,
 área do cliente e painel administrativo. Projeto de portfólio com foco em **regras de negócio
 bem testadas, segurança e arquitetura organizada**.
@@ -38,7 +41,7 @@ web/ (Angular)  →  Loja.Api  →  Loja.Application  →  Loja.Domain
 | 4 | Checkout: pedido, Mercado Pago (sandbox), webhook idempotente, estoque | ✅ |
 | 5 | Painel administrativo: produtos, estoque, pedidos e dashboard | ✅ |
 | 6a | Qualidade: ajustes finais, CI no GitHub Actions e testes de ponta a ponta | ✅ |
-| 6b | Publicação da demo | ⏳ |
+| 6b | Publicação da demo (Render + Neon, deploy contínuo) | ✅ |
 
 ## Como rodar
 
@@ -112,6 +115,8 @@ administrador envia e entrega o pedido. Todas as credenciais do CI são geradas 
   de tentativas de login valer por pessoa, e HTTPS obrigatório com HSTS.
 - Os planos gratuitos dormem quando ninguém usa: **o primeiro acesso pode levar até 1 minuto**
   (a API acorda em cerca de um minuto; o banco, em frações de segundo).
+- Endereços: loja em [loja-virtual-5nz4.onrender.com](https://loja-virtual-5nz4.onrender.com) e
+  API em `loja-virtual-api-snsk.onrender.com`.
 
 ## Decisões técnicas
 - **Regras de negócio no domínio**: produto não vende além do estoque, pedido segue uma máquina
@@ -219,4 +224,12 @@ administrador envia e entrega o pedido. Todas as credenciais do CI são geradas 
 O acesso de administrador é criado pelo `setup-dev.sh`: e-mail `admin@loja.local` e senha
 aleatória, que fica no arquivo `.env` (fora do Git).
 
-- LinkedIn: [seu-perfil](https://www.linkedin.com/in/SEU-PERFIL)
+## Autor
+**Johnatan Flores**
+
+- GitHub: [@johnatantech](https://github.com/johnatantech)
+- Portfólio: [johnatantech.github.io](https://johnatantech.github.io)
+- LinkedIn: [seu-perfil](https://www.linkedin.com/in/johnatan-flores-67595a221/)
+
+Projeto desenvolvido para portfólio. Sugestões e feedbacks são bem-vindos via
+[issues](https://github.com/johnatantech/loja-virtual/issues).
